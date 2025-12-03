@@ -2,7 +2,7 @@ services:
   - type: web
     name: idosos-monitoramento
     env: python
-    buildCommand: "./build.sh"
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput"
     startCommand: "gunicorn idosos_monitoramento.wsgi:application"
     envVars:
       - key: DATABASE_URL
@@ -17,6 +17,8 @@ services:
         value: "*"
       - key: PYTHON_VERSION
         value: "3.11.0"
+      - key: PIP_NO_BINARY  # <-- Força pip
+        value: "all"
 
 databases:
   - name: idosos_db
