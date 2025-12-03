@@ -1,3 +1,8 @@
+# ==========================================
+# SETTINGS.PY - OTIMIZADO PARA RENDER
+# PostgreSQL + WhiteNoise + Segurança
+# ==========================================
+
 import os
 from pathlib import Path
 from decouple import config
@@ -5,30 +10,42 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-temporary-key')
-DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = ['*']  # O Render configura o host automaticamente
+# ==========================================
+# SEGURANÇA
+# ==========================================
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-ME-IN-PRODUCTION')
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
-# Apps ESSENCIAIS (sem Celery/Redis)
+# ==========================================
+# APPS INSTALADOS
+# ==========================================
 INSTALLED_APPS = [
+    # Django Core
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     # Terceiros
     'crispy_forms',
     'crispy_bootstrap5',
     'rest_framework',
     'rest_framework.authtoken',
-    # Seu app
+    
+    # Apps do Projeto
     'monitoramento',
+    'api',
 ]
 
+# ==========================================
+# MIDDLEWARE
+# ==========================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -37,8 +54,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# ==========================================
+# URLS E WSGI
+# ==========================================
 ROOT_URLCONF = 'idosos_monitoramento.urls'
+WSGI_APPLICATION = 'idosos_monitoramento.wsgi.application'
 
+# ==========================================
+# TEMPLATES
+# ==========================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -55,20 +79,21 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'idosos_monitoramento.wsgi.application'
-
-# Banco: SQLite local, PostgreSQL no Render
+# ==========================================
+# BANCO DE DADOS - POSTGRESQL (RENDER)
+# ==========================================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600,  # Conexões persistentes
+        conn_health_checks=True,  # Health checks automáticos
+        ssl_require=True,  # SSL obrigatório no Render
+    )
 }
 
-database_url = config('DATABASE_URL', default=None)
-if database_url:
-    DATABASES['default'] = dj_database_url.parse(database_url)
-
+# ==========================================
+# VALIDAÇÃO DE SENHAS
+# ==========================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -76,27 +101,54 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internacionalização
+# ==========================================
+# INTERNACIONALIZAÇÃO
+# ==========================================
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (WhiteNoise já configurado)
+# ==========================================
+# ARQUIVOS ESTÁTICOS (WHITENOISE)
+# ==========================================
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Segurança
-SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = 'DENY'
+# Compressão e cache no WhiteNoise
+WHITENOISE_COMPRESS_OFFLINE = True
+WHITENOISE_MANIFEST_STRICT = False  # Evita erros em dev
 
-# Crispy Forms
+# ==========================================
+# SEGURANÇA EM PRODUÇÃO
+# ==========================================
+if not DEBUG:
+    # HTTPS
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Headers de Segurança
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # HSTS (HTTP Strict Transport Security)
+    SECURE_HSTS_SECONDS = 31536000  # 1 ano
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# ==========================================
+# CRISPY FORMS (BOOTSTRAP 5)
+# ==========================================
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# API REST Framework
+# ==========================================
+# REST FRAMEWORK
+# ==========================================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -106,23 +158,59 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 20,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
 }
 
-# URLs de autenticação
+# ==========================================
+# AUTENTICAÇÃO
+# ==========================================
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'index'
 
-# Chave primária padrão (evita warnings)
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# ==========================================
+# EMAIL (CONSOLE EM DEV, SMTP EM PROD)
+# ==========================================
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = config('EMAIL_USER', default='')
+    EMAIL_HOST_PASSWORD = config('EMAIL_PASS', default='')
+    DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@monitoramento.com')
 
-# Email (console em dev, SMTP em prod)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Para produção
-# EMAIL_HOST = config('EMAIL_HOST', default='')
-# EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = config('EMAIL_USER', default='')
-# EMAIL_HOST_PASSWORD = config('EMAIL_PASS', default='')
-# DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@paidoverde.com')
+# ==========================================
+# LOGGING (PARA DEBUG NO RENDER)
+# ==========================================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# ==========================================
+# CHAVE PRIMÁRIA PADRÃO
+# ==========================================
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

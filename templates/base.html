@@ -1,144 +1,254 @@
-{% load static %}  <!-- ESSA LINHA É OBRIGATÓRIA NO TOPO -->
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#2c5aa0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Monitoramento Idosos">
+    <meta name="apple-mobile-web-app-title" content="Monitoramento">
+    <meta name="description" content="Sistema de monitoramento de saúde para idosos em tempo real">
     <title>{% block title %}Monitoramento de Idosos{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Ícones Mobile - IMPORTANTE: Estes arquivos DEVEM existir em static/images/ -->
-    <link rel="icon" href="{% static 'images/favicon.ico' %}">
-    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
-    <link rel="manifest" href="{% static 'manifest.json' %}">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- CSS Mobile -->
-    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
-    
+    <!-- NOVO CSS MODERNO -->
     <style>
+        /* Inline critical CSS */
         :root {
-            --primary-color: #2c5aa0;
-            --secondary-color: #f8f9fa;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --info-color: #17a2b8;
-            --light-bg: #f8f9fa;
-            --dark-text: #212529;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-800: #1f2937;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-bg);
-            color: var(--dark-text);
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, #f3f4f6 100%);
+            min-height: 100vh;
+            padding-top: 76px;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
         }
         
         .navbar-brand {
-            font-weight: 600;
-            font-size: 1.25rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+            transition: var(--transition);
         }
         
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Cards */
         .card {
             border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: var(--transition);
+            background: white;
             margin-bottom: 1.5rem;
         }
         
-        .metric-card {
-            text-align: center;
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
             padding: 1.5rem;
+            font-weight: 600;
+            border-radius: 16px 16px 0 0 !important;
+        }
+        
+        /* Métricas */
+        .metric-card {
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), #8b5cf6);
         }
         
         .metric-value {
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
             margin-bottom: 0.5rem;
         }
         
         .metric-label {
-            font-size: 0.9rem;
-            color: #6c757d;
+            font-size: 0.875rem;
+            color: #6b7280;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
         
-        .status-indicator {
-            width: 12px;
-            height: 12px;
+        /* Botões */
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+            
+            .metric-value {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                min-height: 48px;
+                padding: 0.875rem 1.25rem;
+            }
+            
+            .card {
+                border-radius: 12px;
+            }
+        }
+        
+        /* Loading */
+        .page-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e5e7eb;
+            border-top-color: var(--primary);
             border-radius: 50%;
-            display: inline-block;
-            margin-right: 0.5rem;
+            animation: spin 1s linear infinite;
         }
         
-        .status-online { background-color: var(--success-color); }
-        .status-offline { background-color: var(--danger-color); }
-        .status-warning { background-color: var(--warning-color); }
-        
-        .footer {
-            background-color: #fff;
-            border-top: 1px solid rgba(0, 0, 0, 0.125);
-            padding: 2rem 0;
-            margin-top: 3rem;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation Mobile-First -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'index' %}">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'index' %}">
                 <i class="fas fa-heartbeat me-2"></i>
                 <span class="d-none d-sm-inline">Monitoramento</span>
-                <span class="d-inline d-sm-none">App</span>
+                <span class="d-inline d-sm-none">Monitor</span>
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'dashboard' %}">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span class="d-none d-sm-inline ms-1">Dashboard</span>
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            <span>Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'lista_idosos' %}">
-                            <i class="fas fa-users"></i>
-                            <span class="d-none d-sm-inline ms-1">Idosos</span>
+                            <i class="fas fa-users me-1"></i>
+                            <span>Idosos</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'lista_alertas' %}">
-                            <i class="fas fa-bell"></i>
-                            <span class="d-none d-sm-inline ms-1">Alertas</span>
+                            <i class="fas fa-bell me-1"></i>
+                            <span>Alertas</span>
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i>
-                                <span class="d-none d-sm-inline ms-1">{{ user.username }}</span>
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
+                                <div class="bg-white bg-opacity-25 rounded-circle p-2 me-2">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="d-none d-md-inline">{{ user.username }}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
@@ -150,9 +260,8 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">
-                                <i class="fas fa-sign-in-alt"></i>
-                                <span class="d-none d-sm-inline ms-1">Entrar</span>
+                            <a class="nav-link btn btn-light text-primary px-3 rounded-pill" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Entrar
                             </a>
                         </li>
                     {% endif %}
@@ -163,35 +272,72 @@
 
     <!-- Main Content -->
     <main class="container-fluid py-4">
+        <!-- Messages -->
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-
+                                {% if message.tags == 'success' %}check-circle
+                                {% elif message.tags == 'error' %}exclamation-circle
+                                {% elif message.tags == 'warning' %}exclamation-triangle
+                                {% else %}info-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
+            </div>
         {% endif %}
         
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer mt-5">
         <div class="container text-center">
-            <p class="mb-0">
-                &copy; 2024 Monitoramento de Idosos - Instituto Federal de São Paulo
+            <div class="mb-3">
+                <i class="fas fa-heartbeat fa-2x text-primary mb-3"></i>
+            </div>
+            <p class="mb-2 fw-bold">&copy; 2024 Sistema de Monitoramento de Idosos</p>
+            <p class="text-white-50 small mb-3">
+                Instituto Federal de São Paulo - Projeto TCC
             </p>
-            <small class="text-muted">
+            <p class="text-white-50 small">
                 Desenvolvido por: Augusto, Eduardo, Fernando, Gabriel M Martins, Matheus, Nicolas
-            </small>
+            </p>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- jQuery -->
+    <!-- jQuery (opcional, só se necessário) -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- Scripts customizados -->
+    <script>
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
