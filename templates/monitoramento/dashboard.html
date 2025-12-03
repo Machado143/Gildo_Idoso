@@ -2,17 +2,30 @@
 
 {% block title %}Dashboard - Monitoramento de Idosos{% endblock %}
 
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+        transition: all 0.3s;
+    }
+    
+    .chart-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.25);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-lg-none mb-3">
-    <div class="btn-group w-100" role="group">
-        <a href="{% url 'adicionar_idoso' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Idoso
-        </a>
-        <a href="{% url 'lista_alertas' %}" class="btn btn-warning">
-            <i class="fas fa-bell"></i> Alertas
-        </a>
-    </div>
-</div>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -23,12 +36,16 @@
             <p class="text-muted mb-0">Visão geral do monitoramento de idosos</p>
         </div>
         <div>
-            <a href="{% url 'adicionar_idoso' %}" class="btn btn-primary btn-lg">
+            <button class="btn btn-outline-primary me-2" onclick="atualizarGraficos()">
+                <i class="fas fa-sync-alt me-1"></i>Atualizar
+            </button>
+            <a href="{% url 'adicionar_idoso' %}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Adicionar Idoso
             </a>
         </div>
     </div>
     
+    <!-- Métricas -->
     <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card">
@@ -67,6 +84,62 @@
         </div>
     </div>
     
+    <!-- GRÁFICOS -->
+    <div class="row g-4 mb-4">
+        <!-- Gráfico de Frequência Cardíaca -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-heartbeat text-danger me-2"></i>
+                    Frequência Cardíaca (Últimas 24h)
+                </h5>
+                <div class="chart-container">
+                    <canvas id="chartFrequencia"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráfico de Pressão Arterial -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-tint text-primary me-2"></i>
+                    Pressão Arterial (Últimas 24h)
+                </h5>
+                <div class="chart-container">
+                    <canvas id="chartPressao"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráfico de Alertas por Tipo -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-pie text-warning me-2"></i>
+                    Distribuição de Alertas
+                </h5>
+                <div class="chart-container">
+                    <canvas id="chartAlertas"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráfico de Atividade (Passos) -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-walking text-success me-2"></i>
+                    Atividade Física (Passos - 7 dias)
+                </h5>
+                <div class="chart-container">
+                    <canvas id="chartPassos"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Conteúdo Original -->
     <div class="row g-4">
         <div class="col-lg-4">
             <div class="card">
@@ -175,4 +248,280 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Configuração Global dos Gráficos
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+Chart.defaults.color = '#64748B';
+
+// Dados vindos do Django (backend)
+const dadosFrequencia = {
+    labels: {{ chart_labels_fc|safe }},
+    datasets: [{
+        label: 'BPM',
+        data: {{ chart_dados_fc|safe }},
+        borderColor: '#FF3333',
+        backgroundColor: 'rgba(255, 51, 51, 0.1)',
+        tension: 0.4,
+        fill: true,
+        borderWidth: 3
+    }]
+};
+
+const dadosPressao = {
+    labels: {{ chart_labels_pressao|safe }},
+    datasets: [
+        {
+            label: 'Sistólica',
+            data: {{ chart_dados_sistolica|safe }},
+            borderColor: '#0066CC',
+            backgroundColor: 'rgba(0, 102, 204, 0.1)',
+            tension: 0.4,
+            borderWidth: 3
+        },
+        {
+            label: 'Diastólica',
+            data: {{ chart_dados_diastolica|safe }},
+            borderColor: '#0099FF',
+            backgroundColor: 'rgba(0, 153, 255, 0.1)',
+            tension: 0.4,
+            borderWidth: 3
+        }
+    ]
+};
+
+const dadosAlertas = {
+    labels: {{ chart_labels_alertas|safe }},
+    datasets: [{
+        data: {{ chart_dados_alertas|safe }},
+        backgroundColor: [
+            '#FF3333',
+            '#0066CC',
+            '#FF9900',
+            '#00CC66',
+            '#00CCFF'
+        ],
+        borderWidth: 0
+    }]
+};
+
+const dadosPassos = {
+    labels: {{ chart_labels_passos|safe }},
+    datasets: [{
+        label: 'Passos',
+        data: {{ chart_dados_passos|safe }},
+        backgroundColor: '#00CC66',
+        borderRadius: 8
+    }]
+};
+
+// Variáveis globais para os gráficos
+let chartFrequencia, chartPressao, chartAlertas, chartPassos;
+
+// Criar Gráfico de Frequência Cardíaca
+chartFrequencia = new Chart(document.getElementById('chartFrequencia'), {
+    type: 'line',
+    data: dadosFrequencia,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#1E293B',
+                padding: 12,
+                borderRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + ' bpm';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Criar Gráfico de Pressão Arterial
+chartPressao = new Chart(document.getElementById('chartPressao'), {
+    type: 'line',
+    data: dadosPressao,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 15
+                }
+            },
+            tooltip: {
+                backgroundColor: '#1E293B',
+                padding: 12,
+                borderRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y + ' mmHg';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Criar Gráfico de Alertas (Pizza)
+chartAlertas = new Chart(document.getElementById('chartAlertas'), {
+    type: 'doughnut',
+    data: dadosAlertas,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+                labels: {
+                    usePointStyle: true,
+                    padding: 15
+                }
+            },
+            tooltip: {
+                backgroundColor: '#1E293B',
+                padding: 12,
+                borderRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        return context.label + ': ' + context.parsed + ' alertas';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Criar Gráfico de Passos
+chartPassos = new Chart(document.getElementById('chartPassos'), {
+    type: 'bar',
+    data: dadosPassos,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#1E293B',
+                padding: 12,
+                borderRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y.toLocaleString() + ' passos';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Função para atualizar gráficos via AJAX
+function atualizarGraficos() {
+    const btn = event.target.closest('button');
+    const icon = btn.querySelector('i');
+    icon.classList.add('fa-spin');
+    
+    // Atualizar Frequência Cardíaca
+    fetch('/api/graficos/frequencia/')
+        .then(response => response.json())
+        .then(data => {
+            chartFrequencia.data.labels = data.labels;
+            chartFrequencia.data.datasets[0].data = data.data;
+            chartFrequencia.update();
+        });
+    
+    // Atualizar Pressão
+    fetch('/api/graficos/pressao/')
+        .then(response => response.json())
+        .then(data => {
+            chartPressao.data.labels = data.labels;
+            chartPressao.data.datasets[0].data = data.sistolica;
+            chartPressao.data.datasets[1].data = data.diastolica;
+            chartPressao.update();
+        });
+    
+    // Atualizar Alertas
+    fetch('/api/graficos/alertas/')
+        .then(response => response.json())
+        .then(data => {
+            chartAlertas.data.labels = data.labels;
+            chartAlertas.data.datasets[0].data = data.data;
+            chartAlertas.update();
+        });
+    
+    // Atualizar Passos
+    fetch('/api/graficos/passos/')
+        .then(response => response.json())
+        .then(data => {
+            chartPassos.data.labels = data.labels;
+            chartPassos.data.datasets[0].data = data.data;
+            chartPassos.update();
+            
+            icon.classList.remove('fa-spin');
+        });
+}
+
+// Auto-atualização a cada 30 segundos
+setInterval(atualizarGraficos, 30000);
+</script>
 {% endblock %}

@@ -14,6 +14,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card">
                 <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
                     <div class="metric-value text-primary">{{ idosos|length }}</div>
                     <div class="metric-label">Idosos Ativos</div>
                 </div>
@@ -22,6 +23,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card">
                 <div class="card-body text-center">
+                    <i class="fas fa-bell fa-3x text-warning mb-3"></i>
                     <div class="metric-value text-warning">{{ total_alertas }}</div>
                     <div class="metric-label">Total de Alertas</div>
                 </div>
@@ -30,6 +32,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card">
                 <div class="card-body text-center">
+                    <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
                     <div class="metric-value text-danger">{{ alertas_criticos }}</div>
                     <div class="metric-label">Alertas Críticos</div>
                 </div>
@@ -38,6 +41,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card">
                 <div class="card-body text-center">
+                    <i class="fas fa-heartbeat fa-3x text-info mb-3"></i>
                     <div class="metric-value text-info">
                         {{ media_frequencia|floatformat:"0" }}
                     </div>
@@ -47,20 +51,116 @@
         </div>
     </div>
     
-    <!-- Ações -->
+    <!-- Exportação de Dados -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-excel me-2"></i>
+                        Exportar Dados (CSV)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Baixe todos os dados de saúde em formato CSV para análise externa no Excel ou Google Sheets.
+                    </p>
+                    <a href="{% url 'exportar_dados' %}" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-download me-2"></i>
+                        Baixar Dados em CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-pdf me-2"></i>
+                        Relatório Geral (PDF)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Gere um relatório completo em PDF com resumo de todos os idosos e estatísticas gerais.
+                    </p>
+                    <a href="{% url 'relatorio_pdf_geral' %}" class="btn btn-danger btn-lg w-100" target="_blank">
+                        <i class="fas fa-file-pdf me-2"></i>
+                        Gerar Relatório Geral PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Relatórios Individuais -->
     <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Exportação de Dados</h5>
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-user-circle me-2"></i>
+                Relatórios Individuais por Idoso
+            </h5>
         </div>
         <div class="card-body">
-            <p class="text-muted">
-                Baixe todos os dados de saúde em formato CSV para análise externa.
+            <p class="text-muted mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                Selecione um idoso para gerar um relatório detalhado em PDF com dados de saúde, alertas e estatísticas.
             </p>
-            <a href="{% url 'exportar_dados' %}" class="btn btn-success btn-lg">
-                <i class="fas fa-download me-2"></i>
-                Exportar Dados
-            </a>
+            
+            {% if idosos %}
+                <div class="row g-3">
+                    {% for idoso in idosos %}
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-primary text-white rounded-circle p-3">
+                                                <i class="fas fa-user fa-2x"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">{{ idoso.nome }}</h6>
+                                            <small class="text-muted">{{ idoso.idade }} anos</small><br>
+                                            <small class="text-muted">CPF: {{ idoso.cpf }}</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'relatorio_pdf_idoso' idoso.id %}" 
+                                           class="btn btn-primary" target="_blank">
+                                            <i class="fas fa-file-pdf me-2"></i>
+                                            Gerar Relatório PDF
+                                        </a>
+                                        <a href="{% url 'detalhe_idoso' idoso.id %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Ver Detalhes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-users fa-4x mb-3 opacity-25"></i>
+                    <p class="mb-0">Nenhum idoso cadastrado ainda.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<style>
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 102, 204, 0.25);
+    transition: all 0.3s;
+}
+</style>
 {% endblock %}
