@@ -1,15 +1,24 @@
-<!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2c5aa0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Monitoramento Idosos">
     <title>{% block title %}Monitoramento de Idosos{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+
+    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
+
+    <link rel="manifest" href="{% static 'manifest.json' %}">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -86,71 +95,79 @@
         }
     </style>
     
-    {% block extra_css %}{% endblock %}
+    {% block extra_css 
+        <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+        %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'index' %}">
-                <i class="fas fa-heartbeat me-2"></i>
-                Monitoramento de Idosos
-            </a>
+    <!-- Substitua o <nav> atual por este: -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <i class="fas fa-heartbeat me-2"></i>
+            <span class="d-none d-sm-inline">Monitoramento</span>
+            <span class="d-inline d-sm-none">App</span>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="d-none d-sm-inline ms-1">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'lista_idosos' %}">
+                        <i class="fas fa-users"></i>
+                        <span class="d-none d-sm-inline ms-1">Idosos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'lista_alertas' %}">
+                        <i class="fas fa-bell"></i>
+                        <span class="d-none d-sm-inline ms-1">
+                            Alertas
+                            {% if alertas_pendentes_count %}
+                                <span class="badge bg-danger ms-1">{{ alertas_pendentes_count }}</span>
+                            {% endif %}
+                        </span>
+                    </a>
+                </li>
+            </ul>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i>
+                            <span class="d-none d-sm-inline ms-1">{{ user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span class="d-none d-sm-inline ms-1">Entrar</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'lista_idosos' %}">
-                            <i class="fas fa-users me-1"></i>Idosos
-                        </a>
-                    </li>
-                    <!-- NOVOS ITENS DE MENU -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'lista_alertas' %}">
-                            <i class="fas fa-exclamation-triangle me-1"></i>Alertas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'relatorios' %}">
-                            <i class="fas fa-chart-bar me-1"></i>Relatórios
-                        </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>{{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'logout' %}">
-                                        <i class="fas fa-sign-out-alt me-1"></i>Sair
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">
-                                <i class="fas fa-sign-in-alt me-1"></i>Entrar
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Main Content -->
     <main class="container-fluid py-4">

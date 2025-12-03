@@ -1,0 +1,45 @@
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+    
+    .navbar-brand {
+        font-size: 1.1rem !important;
+    }
+    
+    .metric-value {
+        font-size: 1.8rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem !important;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .table td, .table th {
+        padding: 0.5rem;
+    }
+    
+    /* Menu lateral para mobile */
+    .offcanvas-mobile {
+        width: 85% !important;
+    }
+    
+    /* Botões maiores para toque */
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* iOS Safari specific */
+@supports (-webkit-touch-callout: none) {
+    body {
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+    }
+}
