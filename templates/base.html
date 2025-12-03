@@ -79,6 +79,11 @@
             padding: 2rem 0;
             margin-top: 3rem;
         }
+        
+        /* Estilo para o dropdown do usuário */
+        .dropdown-menu {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -87,7 +92,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand" href="{% url 'index' %}">
                 <i class="fas fa-heartbeat me-2"></i>
                 Monitoramento de Idosos
             </a>
@@ -99,13 +104,24 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard/">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
                             <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/idosos/">
+                        <a class="nav-link" href="{% url 'lista_idosos' %}">
                             <i class="fas fa-users me-1"></i>Idosos
+                        </a>
+                    </li>
+                    <!-- NOVOS ITENS DE MENU -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'lista_alertas' %}">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Alertas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'relatorios' %}">
+                            <i class="fas fa-chart-bar me-1"></i>Relatórios
                         </a>
                     </li>
                 </ul>
@@ -116,21 +132,23 @@
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user me-1"></i>{{ user.username }}
                             </a>
-n                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/accounts/logout/">
-                                    <i class="fas fa-sign-out-alt me-1"></i>Sair
-                                </a></li>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'logout' %}">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Sair
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="/accounts/login/">
+                            <a class="nav-link" href="{% url 'login' %}">
                                 <i class="fas fa-sign-in-alt me-1"></i>Entrar
                             </a>
                         </li>
                     {% endif %}
                 </ul>
-n            </div>
+            </div>
         </div>
     </nav>
 

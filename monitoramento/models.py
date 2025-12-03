@@ -135,3 +135,20 @@ class HistoricoSaude(models.Model):
 
     def __str__(self):
         return f"Consulta {self.idoso.nome} - {self.data_consulta}"
+    
+
+class Notificacao(models.Model):
+    TIPOS = [
+        ('email', 'Email'),
+        ('sms', 'SMS'),
+        ('push', 'Push Notification'),
+    ]
+    
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    alerta = models.ForeignKey(Alerta, on_delete=models.CASCADE)
+    tipo = models.CharField(max_length=10, choices=TIPOS)
+    enviado = models.BooleanField(default=False)
+    data_envio = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-data_envio']

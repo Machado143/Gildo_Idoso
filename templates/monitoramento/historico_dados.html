@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Histórico - {{ idoso.nome }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-chart-line text-info me-2"></i>
+                Histórico de Dados - {{ idoso.nome }}
+            </h1>
+            <p class="text-muted mb-0">Idade: {{ idoso.idade }} anos | CPF: {{ idoso.cpf }}</p>
+        </div>
+        <a href="{% url 'detalhe_idoso' idoso.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Período:</label>
+                    <select name="dias" class="form-select" onchange="this.form.submit()">
+                        <option value="1" {% if dias == '1' %}selected{% endif %}>Últimas 24 horas</option>
+                        <option value="7" {% if dias == '7' %}selected{% endif %}>Últimos 7 dias</option>
+                        <option value="30" {% if dias == '30' %}selected{% endif %}>Últimos 30 dias</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Tabela de Dados -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2"></i>
+                Registros de Saúde
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if dados %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Frequência</th>
+                                <th>Pressão</th>
+                                <th>Saturação O₂</th>
+                                <th>Temperatura</th>
+                                <th>Passos</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dado in dados %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ dado.timestamp|date:"d/m/Y" }}</strong><br>
+                                        <small class="text-muted">{{ dado.timestamp|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if dado.frequencia_cardiaca %}
+                                            {{ dado.frequencia_cardiaca }} bpm
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dado.pressao_arterial %}
+                                            {{ dado.pressao_arterial }} mmHg
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dado.saturacao_oxigenio %}
+                                            {{ dado.saturacao_oxigenio }}%
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dado.temperatura %}
+                                            {{ dado.temperatura }}°C
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dado.passos %}
+                                            {{ dado.passos }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dado.queda_detectada %}
+                                            <span class="badge bg-danger">EMERGÊNCIA</span>
+                                        {% elif dado.botao_emergencia %}
+                                            <span class="badge bg-warning">BOTÃO ACIONADO</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Normal</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Paginação -->
+                {% if dados.has_other_pages %}
+                    <nav aria-label="Paginação">
+                        <ul class="pagination justify-content-center mt-4">
+                            {% if dados.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?dias={{ dias }}&page={{ dados.previous_page_number }}">Anterior</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">{{ dados.number }} de {{ dados.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if dados.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?dias={{ dias }}&page={{ dados.next_page_number }}">Próximo</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Nenhum dado encontrado para o período selecionado.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

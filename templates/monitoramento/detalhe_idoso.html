@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+  <h1>{{ idoso.nome }}</h1>
+  
+  <!-- Gráfico de Frequência Cardíaca -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>Frequência Cardíaca - Últimas 24h</h5>
+    </div>
+    <div class="card-body">
+      <canvas id="frequenciaChart" width="400" height="150"></canvas>
+    </div>
+  </div>
+  
+  <!-- Tabela de Dados -->
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Frequência</th>
+          <th>Pressão</th>
+          <th>Saturação</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dado in dados_recentes %}
+        <tr>
+          <td>{{ dado.timestamp|date:"d/m/Y H:i" }}</td>
+          <td>{{ dado.frequencia_cardiaca }} bpm</td>
+          <td>{{ dado.pressao_arterial }}</td>
+          <td>{{ dado.saturacao_oxigenio }}%</td>
+          <td>
+            {% if dado.queda_detectada %}
+              <span class="badge bg-danger">Emergência</span>
+            {% else %}
+              <span class="badge bg-success">Normal</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Script para gerar gráfico com Chart.js
+  const ctx = document.getElementById('frequenciaChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [{% for dado in dados_recentes %}'{{ dado.timestamp|date:"H:i" }}',{% endfor %}],
+      datasets: [{
+        label: 'Frequência Cardíaca',
+        data: [{% for dado in dados_recentes %}{{ dado.frequencia_cardiaca|default:"null" }},{% endfor %}],
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }]
+    }
+  });
+</script>
+{% endblock %}
