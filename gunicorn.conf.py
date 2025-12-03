@@ -1,5 +1,3 @@
-# Criar gunicorn.conf.py
-cat > gunicorn.conf.py << 'EOF'
 import multiprocessing
 
 bind = "0.0.0.0:8000"
@@ -8,4 +6,3 @@ worker_class = "sync"
 timeout = 30
 keepalive = 2
 max_requests = 1000
-EOF
