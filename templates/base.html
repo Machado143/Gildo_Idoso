@@ -16,8 +16,55 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
     
+    <!-- Estilos do tema -->
     <style>
-        /* Breadcrumb Navigation */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dropdown-menu {
+            border-radius: 12px;
+            border: none;
+            box-shadow: var(--shadow-lg);
+            padding: 0.5rem;
+        }
+        
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: var(--transition);
+        }
+        
+        .dropdown-item:hover {
+            background: var(--primary-light);
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .navbar .badge {
+            animation: pulse 2s infinite;
+        }
+        
         .breadcrumb-modern {
             background: transparent;
             padding: 1rem 0;
@@ -40,7 +87,6 @@
             color: var(--primary-dark);
         }
         
-        /* Back Button Consistent Style */
         .btn-back {
             display: inline-flex;
             align-items: center;
@@ -62,11 +108,6 @@
             transform: translateX(-4px);
         }
         
-        .btn-back i {
-            font-size: 1rem;
-        }
-        
-        /* Page Header */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -87,7 +128,6 @@
             font-size: 1.75rem;
         }
         
-        /* Mobile Navigation */
         .mobile-nav {
             position: fixed;
             bottom: 0;
@@ -130,7 +170,6 @@
             font-weight: 500;
         }
         
-        /* Messages/Alerts */
         .messages {
             position: fixed;
             top: 80px;
@@ -159,7 +198,6 @@
             }
         }
         
-        /* Loading Spinner */
         .spinner-overlay {
             display: none;
             position: fixed;
@@ -177,7 +215,6 @@
             display: flex;
         }
         
-        /* Responsive Adjustments */
         @media (max-width: 768px) {
             .mobile-nav {
                 display: block;
@@ -244,7 +281,7 @@
                             <a class="nav-link" href="{% url 'lista_alertas' %}">
                                 <i class="fas fa-bell me-1"></i>Alertas
                                 {% if alertas_count > 0 %}
-                                    <span class="badge bg-warning text-dark">{{ alertas_count }}</span>
+                                    <span class="badge bg-warning text-dark ms-1">{{ alertas_count }}</span>
                                 {% endif %}
                             </a>
                         </li>
@@ -264,8 +301,12 @@
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
+                                <!-- LOGOUT CORRETO: Usando formulário POST -->
                                 <li>
-                                    <a class="dropdown-item" href="{% url 'logout' %}">
+                                    <form id="logout-form" method="post" action="{% url 'logout' %}" class="d-none">
+                                        {% csrf_token %}
+                                    </form>
+                                    <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                         <i class="fas fa-sign-out-alt me-2"></i>Sair
                                     </a>
                                 </li>
@@ -404,6 +445,22 @@
                 link.classList.add('active');
             }
         });
+        
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const toast = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-check-circle me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            document.querySelector('.messages').insertAdjacentHTML('beforeend', toast);
+            new bootstrap.Toast(document.querySelector('.toast:last-child')).show();
+        }
     </script>
     
     {% block extra_js %}{% endblock %}
