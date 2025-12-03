@@ -1,767 +1,411 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoramento de Saúde - Idosos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>{% block title %}Monitoramento de Idosos{% endblock %}</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Breadcrumb Navigation */
+        .breadcrumb-modern {
+            background: transparent;
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
         }
-
-        :root {
-            --primary: #4A90E2;
-            --primary-dark: #357ABD;
-            --success: #5CB85C;
-            --warning: #F0AD4E;
-            --danger: #D9534F;
-            --light-bg: #F8F9FA;
-            --white: #FFFFFF;
-            --text-dark: #333333;
-            --text-muted: #6C757D;
-            --border-color: #DEE2E6;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+        
+        .breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            font-size: 1.25rem;
+            color: var(--gray-400);
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--light-bg);
-            color: var(--text-dark);
-            line-height: 1.6;
+        
+        .breadcrumb-modern a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.2s;
         }
-
-        /* Header */
-        header {
-            background: var(--white);
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        
+        .breadcrumb-modern a:hover {
+            color: var(--primary-dark);
         }
-
-        nav {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
+        
+        /* Back Button Consistent Style */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 2px solid var(--gray-300);
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .btn-back:hover {
+            background: var(--gray-200);
+            border-color: var(--gray-400);
+            color: var(--gray-900);
+            transform: translateX(-4px);
+        }
+        
+        .btn-back i {
+            font-size: 1rem;
+        }
+        
+        /* Page Header */
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-
-        .logo {
+        
+        .page-title {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--primary);
+            margin: 0;
         }
-
-        .logo svg {
-            width: 32px;
-            height: 32px;
+        
+        .page-title i {
+            font-size: 1.75rem;
         }
-
-        .nav-buttons {
+        
+        /* Mobile Navigation */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .mobile-nav-items {
             display: flex;
-            gap: 1rem;
+            justify-content: space-around;
+            padding: 0.5rem 0;
         }
-
-        /* Buttons */
-        .btn {
-            padding: 0.625rem 1.25rem;
-            border-radius: 8px;
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.938rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-
-        .btn-outline:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #4A9D4A;
-        }
-
-        /* Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            margin-bottom: 1.5rem;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.25rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--light-bg);
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 1.75rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            border-left: 4px solid var(--primary);
-        }
-
-        .stat-card.success {
-            border-left-color: var(--success);
-        }
-
-        .stat-card.warning {
-            border-left-color: var(--warning);
-        }
-
-        .stat-card.danger {
-            border-left-color: var(--danger);
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Table */
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: var(--light-bg);
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        tr:hover {
-            background: var(--light-bg);
-        }
-
-        /* Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.813rem;
-            font-weight: 500;
-        }
-
-        .badge-success {
-            background: #D4EDDA;
-            color: #155724;
-        }
-
-        .badge-warning {
-            background: #FFF3CD;
-            color: #856404;
-        }
-
-        .badge-danger {
-            background: #F8D7DA;
-            color: #721C24;
-        }
-
-        /* Alert List */
-        .alert-list {
+        
+        .mobile-nav-item {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .alert-item {
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid;
-            background: var(--white);
-            box-shadow: var(--shadow);
-        }
-
-        .alert-item.critical {
-            border-left-color: var(--danger);
-            background: #FFF5F5;
-        }
-
-        .alert-item.high {
-            border-left-color: var(--warning);
-            background: #FFFBF0;
-        }
-
-        .alert-item.low {
-            border-left-color: var(--success);
-            background: #F0FFF4;
-        }
-
-        .alert-header {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            color: var(--gray-600);
+            text-decoration: none;
+            transition: all 0.2s;
         }
-
-        .alert-name {
-            font-weight: 600;
-            color: var(--text-dark);
+        
+        .mobile-nav-item.active {
+            color: var(--primary);
         }
-
-        .alert-time {
-            font-size: 0.813rem;
-            color: var(--text-muted);
+        
+        .mobile-nav-item i {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
         }
-
-        .alert-message {
-            font-size: 0.938rem;
-            color: var(--text-dark);
-        }
-
-        /* Forms */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
+        
+        .mobile-nav-item span {
+            font-size: 0.75rem;
             font-weight: 500;
-            color: var(--text-dark);
-            font-size: 0.938rem;
         }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-            font-family: inherit;
+        
+        /* Messages/Alerts */
+        .messages {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
         }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
+        
+        .alert-modern {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            animation: slideInRight 0.3s ease-out;
         }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        @media (max-width: 640px) {
-            .form-row {
-                grid-template-columns: 1fr;
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
             }
         }
-
-        /* Chart Container */
-        .chart-container {
-            height: 300px;
-            display: flex;
-            align-items: center;
+        
+        /* Loading Spinner */
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
             justify-content: center;
-            background: var(--light-bg);
-            border-radius: 8px;
-            color: var(--text-muted);
+            align-items: center;
         }
-
-        /* Responsive Mobile */
+        
+        .spinner-overlay.active {
+            display: flex;
+        }
+        
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
-            nav {
-                padding: 1rem;
-                flex-wrap: wrap;
-            }
-
-            .logo {
-                font-size: 1rem;
-            }
-
-            .logo svg {
-                width: 24px;
-                height: 24px;
-            }
-
-            .container {
-                padding: 1rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-
-            .stat-card {
-                padding: 1.25rem;
-            }
-
-            .stat-value {
-                font-size: 2rem;
-            }
-
-            .nav-buttons {
-                width: 100%;
-                margin-top: 0.75rem;
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr;
-                gap: 0.5rem;
-            }
-
-            .btn {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.813rem;
-                justify-content: center;
-            }
-
-            .card {
-                padding: 1rem;
-                border-radius: 8px;
-            }
-
-            .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.75rem;
-            }
-
-            .card-title {
-                font-size: 1.125rem;
-            }
-
-            h1 {
-                font-size: 1.5rem !important;
-            }
-
-            /* Mobile Table Redesign */
-            .table-container {
-                overflow-x: visible;
-            }
-
-            table, thead, tbody, th, td, tr {
+            .mobile-nav {
                 display: block;
             }
-
-            thead {
-                display: none;
+            
+            body {
+                padding-bottom: 70px;
             }
-
-            tr {
-                margin-bottom: 1rem;
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 1rem;
-                background: white;
-            }
-
-            tr:hover {
-                background: white;
-            }
-
-            td {
-                border: none;
-                padding: 0.5rem 0;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: var(--text-muted);
-                font-size: 0.813rem;
-                text-transform: uppercase;
-            }
-
-            /* Form mobile improvements */
-            .form-group {
-                margin-bottom: 1.25rem;
-            }
-
-            input, select, textarea {
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-
-            /* Alert items mobile */
-            .alert-item {
-                padding: 0.875rem;
-            }
-
-            .alert-header {
+            
+            .page-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.25rem;
+            }
+            
+            .messages {
+                right: 10px;
+                left: 10px;
+                top: 70px;
+                max-width: none;
+            }
+            
+            .navbar .container-fluid {
+                padding: 0 1rem;
             }
         }
-
-        /* Extra small devices */
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Icons (usando pseudo-elementos simples) */
-        .icon-heart::before { content: "❤️ "; }
-        .icon-user::before { content: "👤 "; }
-        .icon-bell::before { content: "🔔 "; }
-        .icon-chart::before { content: "📊 "; }
-        .icon-device::before { content: "⌚ "; }
-        .icon-check::before { content: "✅ "; }
-        .icon-warning::before { content: "⚠️ "; }
-        .icon-danger::before { content: "🚨 "; }
     </style>
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                <span>Monitoramento de Saúde</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="btn btn-outline" onclick="showSection('idosos')">
-                    <span class="icon-user"></span>Idosos
-                </button>
-                <button class="btn btn-outline" onclick="showSection('alertas')">
-                    <span class="icon-bell"></span>Alertas
-                </button>
-                <button class="btn btn-primary" onclick="showSection('novo')">
-                    + Novo Registro
-                </button>
-            </div>
-        </nav>
-    </header>
-
-    <div class="container">
-        <!-- Dashboard Section -->
-        <div id="dashboard" class="section">
-            <h1 style="margin-bottom: 2rem; color: var(--text-dark);">Dashboard</h1>
-            
-            <!-- Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">Idosos Monitorados</div>
-                </div>
-                <div class="stat-card success">
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">Dispositivos Ativos</div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-value">2</div>
-                    <div class="stat-label">Alertas Pendentes</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">120</div>
-                    <div class="stat-label">Leituras Hoje</div>
-                </div>
-            </div>
-
-            <!-- Recent Data -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title"><span class="icon-chart"></span>Dados Recentes</h2>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Idoso</th>
-                                <th>Freq. Cardíaca</th>
-                                <th>Pressão</th>
-                                <th>Sat. O₂</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTable">
-                            <!-- Data will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Alerts -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title"><span class="icon-bell"></span>Alertas Recentes</h2>
-                </div>
-                <div class="alert-list" id="alertsList">
-                    <!-- Alerts will be populated here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Idosos Section -->
-        <div id="idosos" class="section" style="display: none;">
-            <h1 style="margin-bottom: 2rem; color: var(--text-dark);">Idosos Cadastrados</h1>
-            
-            <div class="card">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Idade</th>
-                                <th>CPF</th>
-                                <th>Responsável</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="idososTable">
-                            <!-- Will be populated -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alertas Section -->
-        <div id="alertas" class="section" style="display: none;">
-            <h1 style="margin-bottom: 2rem; color: var(--text-dark);">Central de Alertas</h1>
-            
-            <div class="alert-list" id="fullAlertsList">
-                <!-- Full alerts will be populated here -->
-            </div>
-        </div>
-
-        <!-- Novo Registro Section -->
-        <div id="novo" class="section" style="display: none;">
-            <h1 style="margin-bottom: 2rem; color: var(--text-dark);">Novo Cadastro de Idoso</h1>
-            
-            <div class="card">
-                <form id="novoIdosoForm">
-                    <div class="form-group">
-                        <label>Nome Completo *</label>
-                        <input type="text" required placeholder="Digite o nome completo">
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Data de Nascimento *</label>
-                            <input type="date" required>
-                        </div>
-                        <div class="form-group">
-                            <label>CPF *</label>
-                            <input type="text" required placeholder="000.000.000-00">
-                        </div>
-                    </div>
-
-                    <h3 style="margin: 2rem 0 1rem; color: var(--text-dark); font-size: 1.125rem;">Dados do Responsável</h3>
-
-                    <div class="form-group">
-                        <label>Nome do Responsável *</label>
-                        <input type="text" required placeholder="Digite o nome do responsável">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Telefone *</label>
-                            <input type="tel" required placeholder="(00) 00000-0000">
-                        </div>
-                        <div class="form-group">
-                            <label>E-mail *</label>
-                            <input type="email" required placeholder="email@exemplo.com">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-success" style="width: 100%; font-size: 1.063rem;">
-                        <span class="icon-check"></span>Cadastrar Idoso
-                    </button>
-                </form>
-            </div>
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="loadingSpinner">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Carregando...</span>
         </div>
     </div>
 
-    <script>
-        // Sample data
-        const idosos = [
-            { id: 1, nome: 'José da Silva', idade: 76, cpf: '111.222.333-44', responsavel: 'Maria Silva', status: 'Ativo' },
-            { id: 2, nome: 'Ana Maria Santos', idade: 72, cpf: '222.333.444-55', responsavel: 'Carlos Santos', status: 'Ativo' },
-            { id: 3, nome: 'Mário Costa', idade: 79, cpf: '333.444.555-66', responsavel: 'Luciana Costa', status: 'Ativo' }
-        ];
-
-        const recentData = [
-            { idoso: 'José da Silva', fc: 72, pressao: '130/85', sat: 98, status: 'normal' },
-            { idoso: 'Ana Maria Santos', fc: 88, pressao: '140/90', sat: 97, status: 'atencao' },
-            { idoso: 'Mário Costa', fc: 65, pressao: '125/80', sat: 99, status: 'normal' }
-        ];
-
-        const alerts = [
-            { idoso: 'Ana Maria Santos', mensagem: 'Frequência cardíaca elevada: 110 bpm', nivel: 'high', tempo: '15 min atrás' },
-            { idoso: 'Mário Costa', mensagem: 'Inatividade detectada por 3 horas', nivel: 'low', tempo: '1 hora atrás' }
-        ];
-
-        // Populate tables
-        function populateDashboard() {
-            // Recent Data
-            const dataTable = document.getElementById('dataTable');
-            dataTable.innerHTML = recentData.map(d => `
-                <tr>
-                    <td data-label="Idoso"><strong>${d.idoso}</strong></td>
-                    <td data-label="Freq. Cardíaca">${d.fc} bpm</td>
-                    <td data-label="Pressão">${d.pressao}</td>
-                    <td data-label="Sat. O₂">${d.sat}%</td>
-                    <td data-label="Status">
-                        <span class="badge ${d.status === 'normal' ? 'badge-success' : 'badge-warning'}">
-                            ${d.status === 'normal' ? '✓ Normal' : '⚠ Atenção'}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
-
-            // Alerts
-            const alertsList = document.getElementById('alertsList');
-            alertsList.innerHTML = alerts.map(a => `
-                <div class="alert-item ${a.nivel}">
-                    <div class="alert-header">
-                        <span class="alert-name">${a.idoso}</span>
-                        <span class="alert-time">${a.tempo}</span>
-                    </div>
-                    <div class="alert-message">${a.mensagem}</div>
-                </div>
-            `).join('');
-        }
-
-        function populateIdosos() {
-            const idososTable = document.getElementById('idososTable');
-            idososTable.innerHTML = idosos.map(i => `
-                <tr>
-                    <td data-label="Nome"><strong>${i.nome}</strong></td>
-                    <td data-label="Idade">${i.idade} anos</td>
-                    <td data-label="CPF">${i.cpf}</td>
-                    <td data-label="Responsável">${i.responsavel}</td>
-                    <td data-label="Status"><span class="badge badge-success">${i.status}</span></td>
-                    <td data-label="Ações">
-                        <button class="btn btn-outline" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">
-                            Ver Detalhes
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function populateAlerts() {
-            const fullAlertsList = document.getElementById('fullAlertsList');
-            fullAlertsList.innerHTML = alerts.map(a => `
-                <div class="alert-item ${a.nivel}">
-                    <div class="alert-header">
-                        <span class="alert-name">${a.idoso}</span>
-                        <span class="alert-time">${a.tempo}</span>
-                    </div>
-                    <div class="alert-message">${a.mensagem}</div>
-                    <button class="btn btn-success" style="margin-top: 0.75rem; padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        Marcar como Lido
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // Navigation
-        function showSection(section) {
-            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-            document.getElementById(section).style.display = 'block';
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fas fa-heartbeat me-2"></i>
+                <span class="d-none d-sm-inline">Monitoramento</span>
+            </a>
             
-            if (section === 'idosos') populateIdosos();
-            if (section === 'alertas') populateAlerts();
-        }
+            {% if user.is_authenticated %}
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'lista_idosos' %}">
+                                <i class="fas fa-users me-1"></i>Idosos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'lista_alertas' %}">
+                                <i class="fas fa-bell me-1"></i>Alertas
+                                {% if alertas_count > 0 %}
+                                    <span class="badge bg-warning text-dark">{{ alertas_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'relatorios' %}">
+                                <i class="fas fa-chart-bar me-1"></i>Relatórios
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>{{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="/admin/" target="_blank">
+                                        <i class="fas fa-cog me-2"></i>Admin
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'logout' %}">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Sair
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sign-in-alt me-1"></i>Entrar
+                    </a>
+                    <a href="{% url 'public_add_idoso' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-user-plus me-1"></i>Registrar
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </nav>
 
-        // Form submission
-        document.getElementById('novoIdosoForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('✅ Cadastro realizado com sucesso! O idoso será ativado após aprovação.');
-            showSection('dashboard');
+    <!-- Messages -->
+    <div class="messages">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-modern alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        {% block breadcrumb %}{% endblock %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Mobile Navigation (apenas para autenticados) -->
+    {% if user.is_authenticated %}
+    <nav class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="{% url 'dashboard' %}" class="mobile-nav-item {% if request.path == '/dashboard/' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Início</span>
+            </a>
+            <a href="{% url 'lista_idosos' %}" class="mobile-nav-item {% if 'idosos' in request.path %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>Idosos</span>
+            </a>
+            <a href="{% url 'adicionar_idoso' %}" class="mobile-nav-item">
+                <i class="fas fa-plus-circle"></i>
+                <span>Adicionar</span>
+            </a>
+            <a href="{% url 'lista_alertas' %}" class="mobile-nav-item {% if 'alertas' in request.path %}active{% endif %}">
+                <i class="fas fa-bell"></i>
+                <span>Alertas</span>
+            </a>
+            <a href="{% url 'relatorios' %}" class="mobile-nav-item {% if 'relatorios' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>
+                <span>Relatórios</span>
+            </a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="footer mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Monitoramento de Idosos</h5>
+                    <p class="small text-muted">Sistema de acompanhamento de saúde em tempo real para idosos.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Links Úteis</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'lista_idosos' %}">Idosos</a></li>
+                        <li><a href="{% url 'relatorios' %}">Relatórios</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Suporte</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#">Documentação</a></li>
+                        <li><a href="#">Contato</a></li>
+                        <li><a href="/admin/">Painel Admin</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-3 border-secondary">
+            <div class="text-center small">
+                <p class="mb-0">&copy; 2024 IFSP Capivari - Monitoramento de Idosos. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert-modern');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
         });
-
-        // Initialize
-        populateDashboard();
+        
+        // Confirm delete actions
+        document.querySelectorAll('[data-confirm]').forEach(element => {
+            element.addEventListener('click', function(e) {
+                if (!confirm(this.dataset.confirm)) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Show loading spinner on form submit
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                document.getElementById('loadingSpinner').classList.add('active');
+            });
+        });
+        
+        // Active nav link highlighting
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link, .mobile-nav-item').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
     </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

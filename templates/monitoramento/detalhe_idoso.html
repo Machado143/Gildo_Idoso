@@ -1,47 +1,108 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ idoso.nome }}{% endblock %}
+{% block title %}{{ idoso.nome }} - Detalhes{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="breadcrumb-modern">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="fas fa-home"></i> Início</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'lista_idosos' %}">Idosos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ idoso.nome }}</li>
+    </ol>
+</nav>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Page Header with Back Button -->
+    <div class="page-header">
         <div>
-            <h1 class="h3 mb-0">
-                <i class="fas fa-user text-primary me-2"></i>
+            <h1 class="page-title">
+                <i class="fas fa-user text-primary"></i>
                 {{ idoso.nome }}
             </h1>
             <p class="text-muted mb-0">
-                Idade: {{ idoso.idade }} anos | CPF: {{ idoso.cpf }} | 
-                {% if idoso.ativo %}<span class="badge bg-success">Ativo</span>{% else %}<span class="badge bg-warning">Pendente</span>{% endif %}
+                <span class="badge bg-secondary">{{ idoso.idade }} anos</span>
+                <span class="badge bg-info">CPF: {{ idoso.cpf }}</span>
+                {% if idoso.ativo %}
+                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Ativo</span>
+                {% else %}
+                    <span class="badge bg-warning"><i class="fas fa-clock"></i> Pendente</span>
+                {% endif %}
             </p>
         </div>
-        <div>
-            <a href="{% url 'adicionar_dispositivo' idoso.id %}" class="btn btn-info me-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'lista_idosos' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Voltar
+            </a>
+            <a href="{% url 'adicionar_dispositivo' idoso.id %}" class="btn btn-info">
                 <i class="fas fa-plus me-1"></i>Dispositivo
             </a>
-            <a href="{% url 'editar_idoso' idoso.id %}" class="btn btn-warning me-2">
+            <a href="{% url 'editar_idoso' idoso.id %}" class="btn btn-warning">
                 <i class="fas fa-edit me-1"></i>Editar
-            </a>
-            <a href="{% url 'lista_idosos' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Voltar
             </a>
         </div>
     </div>
     
+    <!-- Info Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-heartbeat fa-2x text-danger mb-2"></i>
+                    <h3 class="mb-0">{{ dados_recentes.0.frequencia_cardiaca|default:"-" }}</h3>
+                    <small class="text-muted">BPM Atual</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-tint fa-2x text-primary mb-2"></i>
+                    <h3 class="mb-0">{{ dados_recentes.0.pressao_arterial|default:"-" }}</h3>
+                    <small class="text-muted">Pressão</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-lungs fa-2x text-info mb-2"></i>
+                    <h3 class="mb-0">{{ dados_recentes.0.saturacao_oxigenio|default:"-" }}%</h3>
+                    <small class="text-muted">Saturação O₂</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-thermometer-half fa-2x text-warning mb-2"></i>
+                    <h3 class="mb-0">{{ dados_recentes.0.temperatura|default:"-" }}°C</h3>
+                    <small class="text-muted">Temperatura</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="row g-4">
+        <!-- Left Column -->
         <div class="col-lg-8">
-            <!-- Dados Recentes -->
+            <!-- Recent Health Data -->
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-chart-line text-info me-2"></i>
-                        Dados das Últimas 24 Horas
+                        Últimas 24 Horas
                     </h5>
+                    <a href="{% url 'historico_dados' idoso.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-history me-1"></i>Ver Tudo
+                    </a>
                 </div>
                 <div class="card-body">
                     {% if dados_recentes %}
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Hora</th>
@@ -53,20 +114,34 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for dado in dados_recentes %}
+                                    {% for dado in dados_recentes|slice:":10" %}
                                         <tr>
-                                            <td>{{ dado.timestamp|time:"H:i" }}</td>
-                                            <td>{{ dado.frequencia_cardiaca }} bpm</td>
-                                            <td>{{ dado.pressao_arterial }}</td>
-                                            <td>{{ dado.saturacao_oxigenio }}%</td>
-                                            <td>{{ dado.temperatura }}°C</td>
-                                            <td>
-                                                {% if dado.queda_detectada %}
-                                                    <span class="badge bg-danger">Queda</span>
-                                                {% elif dado.botao_emergencia %}
-                                                    <span class="badge bg-warning">Botão</span>
+                                            <td data-label="Hora">
+                                                <strong>{{ dado.timestamp|time:"H:i" }}</strong>
+                                            </td>
+                                            <td data-label="FC">
+                                                {% if dado.frequencia_cardiaca %}
+                                                    {{ dado.frequencia_cardiaca }} bpm
                                                 {% else %}
-                                                    <span class="badge bg-success">Normal</span>
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td data-label="Pressão">
+                                                {{ dado.pressao_arterial|default:"-" }}
+                                            </td>
+                                            <td data-label="Sat O₂">
+                                                {{ dado.saturacao_oxigenio|default:"-" }}%
+                                            </td>
+                                            <td data-label="Temp.">
+                                                {{ dado.temperatura|default:"-" }}°C
+                                            </td>
+                                            <td data-label="Status">
+                                                {% if dado.queda_detectada %}
+                                                    <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Queda</span>
+                                                {% elif dado.botao_emergencia %}
+                                                    <span class="badge bg-warning"><i class="fas fa-bell"></i> Emergência</span>
+                                                {% else %}
+                                                    <span class="badge bg-success"><i class="fas fa-check"></i> Normal</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -74,45 +149,68 @@
                                 </tbody>
                             </table>
                         </div>
-                        <a href="{% url 'historico_dados' idoso.id %}" class="btn btn-outline-primary btn-sm mt-3">
-                            <i class="fas fa-history me-1"></i>Ver Histórico Completo
-                        </a>
                     {% else %}
-                        <div class="text-center text-muted py-4">
-                            <p>Nenhum dado nas últimas 24 horas</p>
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-chart-line fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-0">Nenhum dado nas últimas 24 horas</p>
+                            <small>Os dados aparecerão aqui assim que forem coletados</small>
                         </div>
                     {% endif %}
                 </div>
             </div>
             
-            <!-- Dispositivos -->
-            <div class="card mb-4">
-                <div class="card-header">
+            <!-- Devices -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-watch text-info me-2"></i>
-                        Dispositivos
+                        Dispositivos Vinculados
                     </h5>
+                    <a href="{% url 'adicionar_dispositivo' idoso.id %}" class="btn btn-sm btn-info">
+                        <i class="fas fa-plus me-1"></i>Adicionar
+                    </a>
                 </div>
                 <div class="card-body">
                     {% if dispositivos %}
-                        <ul class="list-group">
+                        <div class="row g-3">
                             {% for dispositivo in dispositivos %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ dispositivo.get_tipo_display }}</strong><br>
-                                        <small class="text-muted">{{ dispositivo.modelo }} | Série: {{ dispositivo.numero_serie }}</small>
+                                <div class="col-md-6">
+                                    <div class="card border-{% if dispositivo.ativo %}success{% else %}danger{% endif %}">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <i class="fas fa-{% if dispositivo.tipo == 'relogio' %}watch{% elif dispositivo.tipo == 'pulseira' %}band-aid{% else %}microchip{% endif %} me-1"></i>
+                                                        {{ dispositivo.get_tipo_display }}
+                                                    </h6>
+                                                    <p class="mb-1 small text-muted">{{ dispositivo.modelo }}</p>
+                                                    <p class="mb-0 small"><strong>Série:</strong> {{ dispositivo.numero_serie }}</p>
+                                                </div>
+                                                <span class="badge bg-{% if dispositivo.ativo %}success{% else %}danger{% endif %}">
+                                                    {% if dispositivo.ativo %}
+                                                        <i class="fas fa-check-circle"></i> Ativo
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle"></i> Inativo
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            {% if dispositivo.ultima_sincronizacao %}
+                                                <small class="text-muted">
+                                                    <i class="fas fa-sync me-1"></i>
+                                                    Última sinc: {{ dispositivo.ultima_sincronizacao|timesince }} atrás
+                                                </small>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                    <span class="badge bg-{% if dispositivo.ativo %}success{% else %}danger{% endif %}">
-                                        {{ dispositivo.get_ativo_display }}
-                                    </span>
-                                </li>
+                                </div>
                             {% endfor %}
-                        </ul>
+                        </div>
                     {% else %}
                         <div class="text-center text-muted py-4">
-                            <p>Nenhum dispositivo cadastrado</p>
+                            <i class="fas fa-watch fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-2">Nenhum dispositivo cadastrado</p>
                             <a href="{% url 'adicionar_dispositivo' idoso.id %}" class="btn btn-info btn-sm">
-                                <i class="fas fa-plus me-1"></i>Adicionar Primeiro
+                                <i class="fas fa-plus me-1"></i>Adicionar Primeiro Dispositivo
                             </a>
                         </div>
                     {% endif %}
@@ -120,57 +218,132 @@
             </div>
         </div>
         
+        <!-- Right Column -->
         <div class="col-lg-4">
-            <!-- Alertas Recentes -->
+            <!-- Personal Info -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                        Alertas Recentes
+                        <i class="fas fa-id-card text-primary me-2"></i>
+                        Informações Pessoais
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if alertas_recentes %}
-                        <div class="list-group list-group-flush">
-                            {% for alerta in alertas_recentes %}
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between">
-                                        <span class="badge bg-{{ alerta.nivel }}">{{ alerta.get_nivel_display }}</span>
-                                        <small class="text-muted">{{ alerta.timestamp|date:"d/m" }}</small>
-                                    </div>
-                                    <p class="mb-0 mt-1 small">{{ alerta.mensagem }}</p>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center py-3">Sem alertas recentes</p>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Nome Completo</small>
+                        <strong>{{ idoso.nome }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Idade</small>
+                        <strong>{{ idoso.idade }} anos</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">CPF</small>
+                        <strong>{{ idoso.cpf }}</strong>
+                    </div>
+                    {% if idoso.telefone %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Telefone</small>
+                        <strong>{{ idoso.telefone }}</strong>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Endereço</small>
+                        <strong>{{ idoso.endereco }}</strong>
+                    </div>
+                    {% if idoso.latitude and idoso.longitude %}
+                    <a href="https://maps.google.com/?q={{ idoso.latitude }},{{ idoso.longitude }}" 
+                       target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-map-marker-alt me-1"></i>Ver no Mapa
+                    </a>
                     {% endif %}
                 </div>
             </div>
             
-            <!-- Histórico Médico -->
-            <div class="card">
+            <!-- Responsible Info -->
+            <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-file-medical text-success me-2"></i>
-                        Histórico Médico
+                        <i class="fas fa-user-shield text-success me-2"></i>
+                        Responsável
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if historico %}
-                        <ul class="list-unstyled">
-                            {% for consulta in historico %}
-                                <li class="mb-2">
-                                    <strong>{{ consulta.tipo_consulta }}</strong><br>
-                                    <small class="text-muted">{{ consulta.data_consulta|date:"d/m/Y" }} - Dr. {{ consulta.medico }}</small>
-                                </li>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Nome</small>
+                        <strong>{{ idoso.nome_responsavel }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Telefone</small>
+                        <a href="tel:{{ idoso.telefone_responsavel }}" class="text-decoration-none">
+                            <strong>{{ idoso.telefone_responsavel }}</strong>
+                        </a>
+                    </div>
+                    <div class="mb-0">
+                        <small class="text-muted d-block">E-mail</small>
+                        <a href="mailto:{{ idoso.email_responsavel }}" class="text-decoration-none">
+                            <strong>{{ idoso.email_responsavel }}</strong>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Alerts -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Alertas Recentes
+                    </h5>
+                    <a href="{% url 'lista_alertas' %}" class="btn btn-sm btn-outline-warning">
+                        Ver Todos
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if alertas_recentes %}
+                        <div class="list-group list-group-flush">
+                            {% for alerta in alertas_recentes|slice:":5" %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span class="badge bg-{{ alerta.nivel }}">
+                                            {% if alerta.nivel == 'critico' %}
+                                                <i class="fas fa-exclamation-circle"></i>
+                                            {% elif alerta.nivel == 'alto' %}
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            {% else %}
+                                                <i class="fas fa-info-circle"></i>
+                                            {% endif %}
+                                            {{ alerta.get_nivel_display }}
+                                        </span>
+                                        <small class="text-muted">{{ alerta.timestamp|timesince }} atrás</small>
+                                    </div>
+                                    <p class="mb-0 small">{{ alerta.mensagem }}</p>
+                                </div>
                             {% endfor %}
-                        </ul>
+                        </div>
                     {% else %}
-                        <p class="text-muted text-center py-3">Nenhuma consulta registrada</p>
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-check-circle fa-2x mb-2 text-success opacity-25"></i>
+                            <p class="mb-0 small">Nenhum alerta recente</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
+            
+            <!-- Medical Observations -->
+            {% if idoso.observacoes_medicas %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-notes-medical text-danger me-2"></i>
+                        Observações Médicas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ idoso.observacoes_medicas }}</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
