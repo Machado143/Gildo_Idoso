@@ -2,467 +2,1086 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="theme-color" content="#6366f1">
-    <title>{% block title %}Monitoramento de Idosos{% endblock %}</title>
-    
-    <!-- Bootstrap 5.3 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome 6 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
-    
-    <!-- Estilos do tema -->
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --secondary: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #06b6d4;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .dropdown-menu {
-            border-radius: 12px;
-            border: none;
-            box-shadow: var(--shadow-lg);
-            padding: 0.5rem;
-        }
-        
-        .dropdown-item {
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            transition: var(--transition);
-        }
-        
-        .dropdown-item:hover {
-            background: var(--primary-light);
-            color: white;
-            transform: translateX(4px);
-        }
-        
-        .navbar .badge {
-            animation: pulse 2s infinite;
-        }
-        
-        .breadcrumb-modern {
-            background: transparent;
-            padding: 1rem 0;
-            margin-bottom: 1.5rem;
-        }
-        
-        .breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
-            content: "›";
-            font-size: 1.25rem;
-            color: var(--gray-400);
-        }
-        
-        .breadcrumb-modern a {
-            color: var(--primary);
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        
-        .breadcrumb-modern a:hover {
-            color: var(--primary-dark);
-        }
-        
-        .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            background: var(--gray-100);
-            color: var(--gray-700);
-            border: 2px solid var(--gray-300);
-            border-radius: 12px;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-        
-        .btn-back:hover {
-            background: var(--gray-200);
-            border-color: var(--gray-400);
-            color: var(--gray-900);
-            transform: translateX(-4px);
-        }
-        
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        
-        .page-title {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin: 0;
-        }
-        
-        .page-title i {
-            font-size: 1.75rem;
-        }
-        
-        .mobile-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            display: none;
-        }
-        
-        .mobile-nav-items {
-            display: flex;
-            justify-content: space-around;
-            padding: 0.5rem 0;
-        }
-        
-        .mobile-nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0.5rem;
-            color: var(--gray-600);
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        
-        .mobile-nav-item.active {
-            color: var(--primary);
-        }
-        
-        .mobile-nav-item i {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        .mobile-nav-item span {
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        
-        .messages {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 9999;
-            max-width: 400px;
-        }
-        
-        .alert-modern {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            padding: 1rem 1.25rem;
-            margin-bottom: 1rem;
-            animation: slideInRight 0.3s ease-out;
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .spinner-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .spinner-overlay.active {
-            display: flex;
-        }
-        
-        @media (max-width: 768px) {
-            .mobile-nav {
-                display: block;
-            }
-            
-            body {
-                padding-bottom: 70px;
-            }
-            
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .messages {
-                right: 10px;
-                left: 10px;
-                top: 70px;
-                max-width: none;
-            }
-            
-            .navbar .container-fluid {
-                padding: 0 1rem;
-            }
-        }
-    </style>
-    
-    {% block extra_css %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#6366f1">
+  <title>{% block title %}Monitoramento de Idosos{% endblock %}</title>
+  
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+  
+  <!-- Estilos do tema -->
+  <style>
+    :root {
+      /* Paleta Principal - Tons de Azul */
+      --primary: #0066CC;
+      --primary-dark: #004C99;
+      --primary-light: #3399FF;
+      --secondary: #0099FF;
+      --success: #00CC66;
+      --warning: #FF9900;
+      --danger: #FF3333;
+      --info: #00CCFF;
+      
+      /* Tons de Cinza e Branco */
+      --white: #FFFFFF;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1E293B;
+      --gray-900: #0F172A;
+      
+      /* Sombras Suaves */
+      --shadow-sm: 0 1px 3px rgba(0, 102, 204, 0.1);
+      --shadow-md: 0 4px 12px rgba(0, 102, 204, 0.15);
+      --shadow-lg: 0 10px 20px rgba(0, 102, 204, 0.2);
+      --shadow-xl: 0 20px 40px rgba(0, 102, 204, 0.25);
+      
+      /* Transições Suaves */
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* RESET E BASE */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 50%, var(--gray-50) 100%);
+      color: var(--gray-800);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* NAVBAR AZUL PROFISSIONAL */
+    .navbar {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+      padding: 1rem 0;
+      border-bottom: 3px solid var(--primary-light);
+    }
+
+    .navbar-brand {
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: -0.5px;
+      transition: var(--transition);
+      color: var(--white) !important;
+    }
+
+    .navbar-brand:hover {
+      transform: scale(1.05);
+      color: var(--primary-light) !important;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+      padding: 0.5rem 1rem !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .nav-link:hover {
+      color: var(--white) !important;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: var(--primary-light);
+      transition: var(--transition);
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+
+    .nav-link:hover::after {
+      width: 80%;
+    }
+
+    /* CARDS MODERNOS COM AZUL E BRANCO */
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+      overflow: hidden;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--primary-light);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--white);
+      border: none;
+      padding: 1.5rem;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+      background: var(--white);
+    }
+
+    /* MÉTRICAS / DASHBOARD */
+    .metric-card {
+      position: relative;
+      padding: 2rem;
+      text-align: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .metric-value {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      line-height: 1;
+    }
+
+    .metric-label {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    /* BOTÕES AZUIS MODERNOS */
+    .btn {
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      transition: var(--transition);
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 102, 204, 0.6);
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #00AA55);
+      box-shadow: 0 4px 15px rgba(0, 204, 102, 0.4);
+      color: var(--white);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--warning), #FF8800);
+      box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4);
+      color: var(--white);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #FF0000);
+      box-shadow: 0 4px 15px rgba(255, 51, 51, 0.4);
+      color: var(--white);
+    }
+
+    .btn-info {
+      background: linear-gradient(135deg, var(--info), #0099CC);
+      box-shadow: 0 4px 15px rgba(0, 204, 255, 0.4);
+      color: var(--white);
+    }
+
+    .btn-outline-primary {
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+      background: var(--primary);
+      color: var(--white);
+      transform: translateY(-2px);
+    }
+
+    /* BADGES AZUIS */
+    .badge {
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.bg-success {
+      background: linear-gradient(135deg, var(--success), #00AA55) !important;
+      box-shadow: 0 2px 8px rgba(0, 204, 102, 0.3);
+    }
+
+    .badge.bg-warning {
+      background: linear-gradient(135deg, var(--warning), #FF8800) !important;
+      box-shadow: 0 2px 8px rgba(255, 153, 0, 0.3);
+    }
+
+    .badge.bg-danger {
+      background: linear-gradient(135deg, var(--danger), #FF0000) !important;
+      box-shadow: 0 2px 8px rgba(255, 51, 51, 0.3);
+    }
+
+    .badge.bg-info {
+      background: linear-gradient(135deg, var(--info), #0099CC) !important;
+      box-shadow: 0 2px 8px rgba(0, 204, 255, 0.3);
+    }
+
+    .badge.bg-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+      box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+    }
+
+    /* TABELAS MODERNAS */
+    .table {
+      border-collapse: separate;
+      border-spacing: 0 0.5rem;
+    }
+
+    .table thead th {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--white);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      border: none;
+      padding: 1rem;
+    }
+
+    .table tbody tr {
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      border: 1px solid var(--gray-200);
+    }
+
+    .table tbody tr:hover {
+      transform: scale(1.01);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-light);
+    }
+
+    .table tbody td {
+      border: none;
+      padding: 1rem;
+      vertical-align: middle;
+    }
+
+    /* ALERTAS MODERNOS */
+    .alert {
+      border: none;
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      border-left: 4px solid;
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, rgba(0, 204, 102, 0.1), rgba(0, 204, 102, 0.05));
+      border-left-color: var(--success);
+      color: #006633;
+    }
+
+    .alert-warning {
+      background: linear-gradient(135deg, rgba(255, 153, 0, 0.1), rgba(255, 153, 0, 0.05));
+      border-left-color: var(--warning);
+      color: #995500;
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, rgba(255, 51, 51, 0.1), rgba(255, 51, 51, 0.05));
+      border-left-color: var(--danger);
+      color: #990000;
+    }
+
+    .alert-info {
+      background: linear-gradient(135deg, rgba(0, 204, 255, 0.1), rgba(0, 204, 255, 0.05));
+      border-left-color: var(--info);
+      color: #006699;
+    }
+
+    /* FORMULÁRIOS MODERNOS */
+    .form-control, .form-select {
+      border: 2px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 0.875rem 1rem;
+      transition: var(--transition);
+      font-size: 1rem;
+      background: var(--white);
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+      outline: none;
+      background: var(--white);
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    /* STATUS INDICATORS */
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.5rem;
+      box-shadow: 0 0 10px currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-online {
+      background: var(--success);
+      color: var(--success);
+    }
+
+    .status-offline {
+      background: var(--danger);
+      color: var(--danger);
+    }
+
+    .status-warning {
+      background: var(--warning);
+      color: var(--warning);
+    }
+
+    /* FOOTER MODERNO AZUL */
+    .footer {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: var(--white);
+      padding: 3rem 0;
+      margin-top: 4rem;
+      box-shadow: 0 -4px 20px rgba(0, 102, 204, 0.2);
+    }
+
+    .footer a {
+      color: var(--primary-light);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer a:hover {
+      color: var(--white);
+      text-decoration: underline;
+    }
+
+    .footer h5, .footer h6 {
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    /* BREADCRUMB */
+    .breadcrumb-modern {
+      background: transparent;
+      padding: 1rem 0;
+      margin-bottom: 1.5rem;
+    }
+
+    .breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
+      content: "›";
+      font-size: 1.25rem;
+      color: var(--gray-400);
+    }
+
+    .breadcrumb-modern a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .breadcrumb-modern a:hover {
+      color: var(--primary-dark);
+    }
+
+    /* BOTÃO VOLTAR */
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.25rem;
+      background: var(--white);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-back:hover {
+      background: var(--primary);
+      color: var(--white);
+      transform: translateX(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+      border-radius: 16px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0;
+      color: var(--primary-dark);
+    }
+
+    .page-title i {
+      font-size: 1.75rem;
+      color: var(--primary);
+    }
+
+    /* RESPONSIVO MOBILE */
+    @media (max-width: 768px) {
+      .navbar-brand {
+        font-size: 1.25rem;
+      }
+      
+      .navbar-collapse {
+        background: rgba(0, 102, 204, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        margin-top: 1rem;
+        padding: 1rem;
+      }
+      
+      .metric-value {
+        font-size: 2rem;
+      }
+      
+      .metric-card {
+        padding: 1.5rem;
+      }
+      
+      .card {
+        margin-bottom: 1rem;
+        border-radius: 12px;
+      }
+      
+      .card-body {
+        padding: 1rem;
+      }
+      
+      .table {
+        font-size: 0.875rem;
+      }
+      
+      .table thead {
+        display: none;
+      }
+      
+      .table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+      }
+      
+      .table tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--gray-100);
+      }
+      
+      .table tbody td:last-child {
+        border-bottom: none;
+      }
+      
+      .table tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--primary);
+      }
+      
+      .btn {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 0.875rem 1.25rem;
+      }
+      
+      .form-control, .form-select {
+        font-size: 16px;
+      }
+      
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      h1, .h1 {
+        font-size: 1.75rem;
+      }
+      
+      h2, .h2 {
+        font-size: 1.5rem;
+      }
+      
+      h3, .h3 {
+        font-size: 1.25rem;
+      }
+    }
+
+    /* DESKTOP ENHANCEMENTS */
+    @media (min-width: 1200px) {
+      .container-fluid {
+        padding-left: 3rem;
+        padding-right: 3rem;
+      }
+      
+      .metric-value {
+        font-size: 3.5rem;
+      }
+      
+      .card-body {
+        padding: 2rem;
+      }
+    }
+
+    /* ANIMAÇÕES SUAVES */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card, .alert, .table tbody tr {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* SCROLL BEHAVIOR */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--gray-100);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
+    }
+
+    /* ACESSIBILIDADE */
+    .btn:focus, .form-control:focus, .form-select:focus {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* LOADING SPINNER */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* DROPDOWN MENU */
+    .dropdown-menu {
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-lg);
+      padding: 0.5rem;
+    }
+
+    .dropdown-item {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      transition: var(--transition);
+      color: var(--gray-700);
+    }
+
+    .dropdown-item:hover {
+      background: var(--primary);
+      color: var(--white);
+      transform: translateX(4px);
+    }
+
+    /* MOBILE NAVIGATION */
+    .mobile-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      box-shadow: 0 -4px 20px rgba(0, 102, 204, 0.15);
+      z-index: 1000;
+      display: none;
+      border-top: 3px solid var(--primary);
+    }
+
+    .mobile-nav-items {
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0;
+    }
+
+    .mobile-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem;
+      color: var(--gray-600);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .mobile-nav-item.active {
+      color: var(--primary);
+      background: rgba(0, 102, 204, 0.1);
+      border-radius: 8px;
+    }
+
+    .mobile-nav-item:hover {
+      color: var(--primary);
+    }
+
+    .mobile-nav-item i {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .mobile-nav-item span {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-nav {
+        display: block;
+      }
+      
+      body {
+        padding-bottom: 70px;
+      }
+    }
+
+    /* MESSAGES/NOTIFICATIONS */
+    .messages {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 400px;
+    }
+
+    .alert-modern {
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 4px 20px rgba(0, 102, 204, 0.2);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .messages {
+        right: 10px;
+        left: 10px;
+        top: 70px;
+        max-width: none;
+      }
+    }
+  </style>
+  
+  {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Loading Spinner -->
-    <div class="spinner-overlay" id="loadingSpinner">
-        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Carregando...</span>
-        </div>
+  <!-- Loading Spinner -->
+  <div class="spinner-overlay" id="loadingSpinner">
+    <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Carregando...</span>
     </div>
+  </div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'index' %}">
-                <i class="fas fa-heartbeat me-2"></i>
-                <span class="d-none d-sm-inline">Monitoramento</span>
-            </a>
-            
-            {% if user.is_authenticated %}
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">
-                                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'lista_idosos' %}">
-                                <i class="fas fa-users me-1"></i>Idosos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'lista_alertas' %}">
-                                <i class="fas fa-bell me-1"></i>Alertas
-                                {% if alertas_count > 0 %}
-                                    <span class="badge bg-warning text-dark ms-1">{{ alertas_count }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'relatorios' %}">
-                                <i class="fas fa-chart-bar me-1"></i>Relatórios
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-1"></i>{{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="/admin/" target="_blank">
-                                        <i class="fas fa-cog me-2"></i>Admin
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <!-- LOGOUT CORRETO: Usando formulário POST -->
-                                <li>
-                                    <form id="logout-form" method="post" action="{% url 'logout' %}" class="d-none">
-                                        {% csrf_token %}
-                                    </form>
-                                    <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Sair
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            {% else %}
-                <div class="d-flex gap-2">
-                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-sign-in-alt me-1"></i>Entrar
-                    </a>
-                    <a href="{% url 'public_add_idoso' %}" class="btn btn-light btn-sm">
-                        <i class="fas fa-user-plus me-1"></i>Registrar
-                    </a>
-                </div>
-            {% endif %}
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'index' %}">
+        <i class="fas fa-heartbeat me-2"></i>
+        <span class="d-none d-sm-inline">Monitoramento</span>
+      </a>
+      
+      {% if user.is_authenticated %}
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'dashboard' %}">
+                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'lista_idosos' %}">
+                <i class="fas fa-users me-1"></i>Idosos
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'lista_alertas' %}">
+                <i class="fas fa-bell me-1"></i>Alertas
+                {% if alertas_count > 0 %}
+                  <span class="badge bg-warning text-dark ms-1">{{ alertas_count }}</span>
+                {% endif %}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'relatorios' %}">
+                <i class="fas fa-chart-bar me-1"></i>Relatórios
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                <i class="fas fa-user-circle me-1"></i>{{ user.username }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a class="dropdown-item" href="/admin/" target="_blank">
+                    <i class="fas fa-cog me-2"></i>Admin
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <!-- LOGOUT CORRETO: Usando formulário POST -->
+                <li>
+                  <form id="logout-form" method="post" action="{% url 'logout' %}" class="d-none">
+                    {% csrf_token %}
+                  </form>
+                  <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fas fa-sign-out-alt me-2"></i>Sair
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div>
-    </nav>
-
-    <!-- Messages -->
-    <div class="messages">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-modern alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+      {% else %}
+        <div class="d-flex gap-2">
+          <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-sign-in-alt me-1"></i>Entrar
+          </a>
+          <a href="{% url 'public_add_idoso' %}" class="btn btn-light btn-sm">
+            <i class="fas fa-user-plus me-1"></i>Registrar
+          </a>
+        </div>
+      {% endif %}
     </div>
+  </nav>
 
-    <!-- Main Content -->
-    <main class="container-fluid py-4">
-        {% block breadcrumb %}{% endblock %}
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Mobile Navigation (apenas para autenticados) -->
-    {% if user.is_authenticated %}
-    <nav class="mobile-nav">
-        <div class="mobile-nav-items">
-            <a href="{% url 'dashboard' %}" class="mobile-nav-item {% if request.path == '/dashboard/' %}active{% endif %}">
-                <i class="fas fa-home"></i>
-                <span>Início</span>
-            </a>
-            <a href="{% url 'lista_idosos' %}" class="mobile-nav-item {% if 'idosos' in request.path %}active{% endif %}">
-                <i class="fas fa-users"></i>
-                <span>Idosos</span>
-            </a>
-            <a href="{% url 'adicionar_idoso' %}" class="mobile-nav-item">
-                <i class="fas fa-plus-circle"></i>
-                <span>Adicionar</span>
-            </a>
-            <a href="{% url 'lista_alertas' %}" class="mobile-nav-item {% if 'alertas' in request.path %}active{% endif %}">
-                <i class="fas fa-bell"></i>
-                <span>Alertas</span>
-            </a>
-            <a href="{% url 'relatorios' %}" class="mobile-nav-item {% if 'relatorios' in request.path %}active{% endif %}">
-                <i class="fas fa-chart-bar"></i>
-                <span>Relatórios</span>
-            </a>
+  <!-- Messages -->
+  <div class="messages">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-modern alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    </nav>
+      {% endfor %}
     {% endif %}
+  </div>
 
-    <!-- Footer -->
-    <footer class="footer mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Monitoramento de Idosos</h5>
-                    <p class="small text-muted">Sistema de acompanhamento de saúde em tempo real para idosos.</p>
-                </div>
-                <div class="col-md-3">
-                    <h6>Links Úteis</h6>
-                    <ul class="list-unstyled small">
-                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                        <li><a href="{% url 'lista_idosos' %}">Idosos</a></li>
-                        <li><a href="{% url 'relatorios' %}">Relatórios</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3">
-                    <h6>Suporte</h6>
-                    <ul class="list-unstyled small">
-                        <li><a href="#">Documentação</a></li>
-                        <li><a href="#">Contato</a></li>
-                        <li><a href="/admin/">Painel Admin</a></li>
-                    </ul>
-                </div>
-            </div>
-            <hr class="my-3 border-secondary">
-            <div class="text-center small">
-                <p class="mb-0">&copy; 2024 IFSP Capivari - Monitoramento de Idosos. Todos os direitos reservados.</p>
-            </div>
+  <!-- Main Content -->
+  <main class="container-fluid py-4">
+    {% block breadcrumb %}{% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Mobile Navigation (apenas para autenticados) -->
+  {% if user.is_authenticated %}
+    <nav class="mobile-nav">
+      <div class="mobile-nav-items">
+        <a href="{% url 'dashboard' %}" class="mobile-nav-item {% if request.path == '/dashboard/' %}active{% endif %}">
+          <i class="fas fa-home"></i>
+          <span>Início</span>
+        </a>
+        <a href="{% url 'lista_idosos' %}" class="mobile-nav-item {% if 'idosos' in request.path %}active{% endif %}">
+          <i class="fas fa-users"></i>
+          <span>Idosos</span>
+        </a>
+        <a href="{% url 'adicionar_idoso' %}" class="mobile-nav-item">
+          <i class="fas fa-plus-circle"></i>
+          <span>Adicionar</span>
+        </a>
+        <a href="{% url 'lista_alertas' %}" class="mobile-nav-item {% if 'alertas' in request.path %}active{% endif %}">
+          <i class="fas fa-bell"></i>
+          <span>Alertas</span>
+        </a>
+        <a href="{% url 'relatorios' %}" class="mobile-nav-item {% if 'relatorios' in request.path %}active{% endif %}">
+          <i class="fas fa-chart-bar"></i>
+          <span>Relatórios</span>
+        </a>
+      </div>
+    </nav>
+  {% endif %}
+
+  <!-- Footer -->
+  <!-- Footer Moderno sem Copyright -->
+  <footer class="footer mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h5 class="mb-3">
+            <i class="fas fa-heartbeat me-2"></i>
+            Monitoramento de Idosos
+          </h5>
+          <p class="small text-white-50">
+            Sistema de acompanhamento de saúde em tempo real para proporcionar segurança e tranquilidade.
+          </p>
         </div>
-    </footer>
+        
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h6 class="mb-3">Navegação Rápida</h6>
+          <ul class="list-unstyled small">
+            <li class="mb-2">
+              <a href="{% url 'dashboard' %}">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="{% url 'lista_idosos' %}">
+                <i class="fas fa-users me-2"></i>Idosos Cadastrados
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="{% url 'lista_alertas' %}">
+                <i class="fas fa-bell me-2"></i>Central de Alertas
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="{% url 'relatorios' %}">
+                <i class="fas fa-chart-bar me-2"></i>Relatórios
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="col-md-4">
+          <h6 class="mb-3">Suporte e Recursos</h6>
+          <ul class="list-unstyled small">
+            <li class="mb-2">
+              <a href="/admin/">
+                <i class="fas fa-cog me-2"></i>Painel Administrativo
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="/api/docs/">
+                <i class="fas fa-code me-2"></i>Documentação da API
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="{% url 'public_add_idoso' %}">
+                <i class="fas fa-user-plus me-2"></i>Registrar Novo Idoso
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="mailto:suporte@monitoramento.com">
+                <i class="fas fa-envelope me-2"></i>Contato
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <hr class="my-4 border-white-50">
+      
+      <div class="row align-items-center">
+        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+          <p class="mb-0 small text-white-50">
+            <i class="fas fa-code me-2"></i>
+            Desenvolvido com <i class="fas fa-heart text-danger"></i> para cuidar de quem você ama
+          </p>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <p class="mb-0 small text-white-50">
+            <i class="fas fa-graduation-cap me-2"></i>
+            Projeto Acadêmico - IFSP Capivari
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js "></script>
+  
+  <!-- Custom JavaScript -->
+  <script>
+    // Auto-hide alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const alerts = document.querySelectorAll('.alert-modern');
+      alerts.forEach(alert => {
+        setTimeout(() => {
+          const bsAlert = new bootstrap.Alert(alert);
+          bsAlert.close();
+        }, 5000);
+      });
+    });
     
-    <!-- Custom JavaScript -->
-    <script>
-        // Auto-hide alerts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert-modern');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }, 5000);
-            });
-        });
-        
-        // Confirm delete actions
-        document.querySelectorAll('[data-confirm]').forEach(element => {
-            element.addEventListener('click', function(e) {
-                if (!confirm(this.dataset.confirm)) {
-                    e.preventDefault();
-                }
-            });
-        });
-        
-        // Show loading spinner on form submit
-        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function() {
-                document.getElementById('loadingSpinner').classList.add('active');
-            });
-        });
-        
-        // Active nav link highlighting
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.nav-link, .mobile-nav-item').forEach(link => {
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('active');
-            }
-        });
-        
-        // Toast notification system
-        function showToast(message, type = 'success') {
-            const toast = `
-                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-check-circle me-2"></i>${message}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
-                </div>
-            `;
-            document.querySelector('.messages').insertAdjacentHTML('beforeend', toast);
-            new bootstrap.Toast(document.querySelector('.toast:last-child')).show();
+    // Confirm delete actions
+    document.querySelectorAll('[data-confirm]').forEach(element => {
+      element.addEventListener('click', function(e) {
+        if (!confirm(this.dataset.confirm)) {
+          e.preventDefault();
         }
-    </script>
+      });
+    });
     
-    {% block extra_js %}{% endblock %}
+    // Show loading spinner on form submit
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function() {
+        document.getElementById('loadingSpinner').classList.add('active');
+      });
+    });
+    
+    // Active nav link highlighting
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.nav-link, .mobile-nav-item').forEach(link => {
+      if (link.getAttribute('href') === currentPath) {
+        link.classList.add('active');
+      }
+    });
+    
+    // Toast notification system
+    function showToast(message, type = 'success') {
+      const toast = `
+        <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+          <div class="d-flex">
+            <div class="toast-body">
+              <i class="fas fa-check-circle me-2"></i>${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      `;
+      document.querySelector('.messages').insertAdjacentHTML('beforeend', toast);
+      new bootstrap.Toast(document.querySelector('.toast:last-child')).show();
+    }
+  </script>
+  
+  {% block extra_js %}{% endblock %}
 </body>
 </html>
