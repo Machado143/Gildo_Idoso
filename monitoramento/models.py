@@ -16,6 +16,8 @@ class Idoso(models.Model):
     observacoes_medicas = models.TextField(blank=True, null=True)
     ativo = models.BooleanField(default=True)
     data_cadastro = models.DateTimeField(default=timezone.now)
+    latitude = models.DecimalField(max_digits=10, decimal_places=8, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True)
 
     def __str__(self):
         return f"{self.nome} - {self.cpf}"
@@ -52,23 +54,19 @@ class DadoSaude(models.Model):
     idoso = models.ForeignKey(Idoso, on_delete=models.CASCADE, related_name='dados_saude')
     dispositivo = models.ForeignKey(Dispositivo, on_delete=models.CASCADE, related_name='dados')
     
-    # Sinais vitais
     frequencia_cardiaca = models.IntegerField(null=True, blank=True)
     pressao_sistolica = models.IntegerField(null=True, blank=True)
     pressao_diastolica = models.IntegerField(null=True, blank=True)
     saturacao_oxigenio = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     temperatura = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     
-    # Atividade física
     passos = models.IntegerField(null=True, blank=True)
     distancia = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     calorias = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     
-    # Sinais de emergência
     queda_detectada = models.BooleanField(default=False)
     botao_emergencia = models.BooleanField(default=False)
     
-    # Metadados
     timestamp = models.DateTimeField(default=timezone.now)
     bateria_dispositivo = models.IntegerField(null=True, blank=True)
 
@@ -135,20 +133,3 @@ class HistoricoSaude(models.Model):
 
     def __str__(self):
         return f"Consulta {self.idoso.nome} - {self.data_consulta}"
-    
-
-class Notificacao(models.Model):
-    TIPOS = [
-        ('email', 'Email'),
-        ('sms', 'SMS'),
-        ('push', 'Push Notification'),
-    ]
-    
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    alerta = models.ForeignKey(Alerta, on_delete=models.CASCADE)
-    tipo = models.CharField(max_length=10, choices=TIPOS)
-    enviado = models.BooleanField(default=False)
-    data_envio = models.DateTimeField(null=True, blank=True)
-    
-    class Meta:
-        ordering = ['-data_envio']

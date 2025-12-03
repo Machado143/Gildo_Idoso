@@ -1,15 +1,32 @@
+# monitoramento/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.core.paginator import Paginator
+from django.views.decorators.http import require_http_methods
 from .models import Idoso, Dispositivo, DadoSaude, Alerta, HistoricoSaude
 from .forms import IdosoForm, DispositivoForm
-from django.core.paginator import Paginator
 import csv
 from django.http import HttpResponse
 
+@require_http_methods(["GET", "POST"])
+def public_add_idoso(request):
+    """View pública para registro de idoso (requer aprovação)"""
+    if request.method == 'POST':
+        form = IdosoForm(request.POST)
+        if form.is_valid():
+            idoso = form.save(commit=False)
+            idoso.ativo = False  # Requer aprovação do admin
+            idoso.save()
+            messages.success(request, '✅ Registro enviado! Entraremos em contato para aprovação.')
+            return redirect('index')
+    else:
+        form = IdosoForm()
+    
+    return render(request, 'monitoramento/registrar_idoso_publico.html', {'form': form})
 
 @login_required
 def dashboard(request):
@@ -80,7 +97,7 @@ def adicionar_idoso(request):
         form = IdosoForm(request.POST)
         if form.is_valid():
             idoso = form.save()
-            messages.success(request, f'Idoso {idoso.nome} cadastrado com sucesso!')
+            messages.success(request, f'✅ Idoso {idoso.nome} cadastrado com sucesso!')
             return redirect('lista_idosos')
     else:
         form = IdosoForm()
@@ -96,7 +113,7 @@ def editar_idoso(request, idoso_id):
         form = IdosoForm(request.POST, instance=idoso)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Dados de {idoso.nome} atualizados!')
+            messages.success(request, f'✅ Dados de {idoso.nome} atualizados!')
             return redirect('detalhe_idoso', idoso_id=idoso.id)
     else:
         form = IdosoForm(instance=idoso)
@@ -114,7 +131,7 @@ def adicionar_dispositivo(request, idoso_id):
             dispositivo = form.save(commit=False)
             dispositivo.idoso = idoso
             dispositivo.save()
-            messages.success(request, 'Dispositivo cadastrado com sucesso!')
+            messages.success(request, '✅ Dispositivo cadastrado com sucesso!')
             return redirect('detalhe_idoso', idoso_id=idoso.id)
     else:
         form = DispositivoForm()
@@ -123,70 +140,6 @@ def adicionar_dispositivo(request, idoso_id):
         'form': form, 
         'idoso': idoso
     })
-
-def index(request):
-    """Página inicial pública"""
-    return render(request, 'monitoramento/index.html')
-
-# Adicione ao final do arquivo monitoramento/views.py
-
-@login_required
-def historico_dados(request, idoso_id):
-    """Mostra histórico completo de dados de um idoso"""
-    idoso = get_object_or_404(Idoso, id=idoso_id)
-    dados = DadoSaude.objects.filter(idoso=idoso).order_by('-timestamp')
-    
-    return render(request, 'monitoramento/historico_dados.html', {
-        'idoso': idoso,
-        'dados': dados
-    })
-
-@login_required
-def lista_alertas(request):
-    """Lista todos os alertas do sistema"""
-    alertas = Alerta.objects.all().order_by('-timestamp')
-    return render(request, 'monitoramento/lista_alertas.html', {'alertas': alertas})
-
-@login_required
-def marcar_alerta_lido(request, alerta_id):
-    """Marca um alerta como visualizado"""
-    alerta = get_object_or_404(Alerta, id=alerta_id)
-    alerta.visualizado = True
-    alerta.data_visualizacao = timezone.now()
-    alerta.save()
-    
-    messages.success(request, 'Alerta marcado como lido!')
-    return redirect('lista_alertas')
-
-@login_required
-def relatorios(request):
-    """Gera relatórios de saúde"""
-    idosos = Idoso.objects.filter(ativo=True)
-    return render(request, 'monitoramento/relatorios.html', {'idosos': idosos})
-
-@login_required
-def exportar_dados(request):
-    """Exporta dados em CSV"""
-    import csv
-    from django.http import HttpResponse
-    
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="dados_idosos.csv"'
-    
-    writer = csv.writer(response)
-    writer.writerow(['Nome', 'Data', 'Frequência', 'Pressão', 'Saturação'])
-    
-    dados = DadoSaude.objects.all()[:1000]
-    for dado in dados:
-        writer.writerow([
-            dado.idoso.nome,
-            dado.timestamp,
-            dado.frequencia_cardiaca,
-            dado.pressao_arterial,
-            dado.saturacao_oxigenio
-        ])
-    
-    return response
 
 @login_required
 def historico_dados(request, idoso_id):
@@ -203,7 +156,7 @@ def historico_dados(request, idoso_id):
     ).order_by('-timestamp')
     
     # Paginação
-    paginator = Paginator(dados, 20)  # 20 itens por página
+    paginator = Paginator(dados, 20)
     page = request.GET.get('page')
     dados_paginados = paginator.get_page(page)
     
@@ -212,6 +165,7 @@ def historico_dados(request, idoso_id):
         'dados': dados_paginados,
         'dias': dias
     })
+
 @login_required
 def lista_alertas(request):
     """Lista todos os alertas com filtros"""
@@ -230,7 +184,7 @@ def lista_alertas(request):
         alertas = alertas.filter(visualizado=visualizado == 'true')
     
     return render(request, 'monitoramento/lista_alertas.html', {
-        'alertas': alertas[:100],  # Limita a 100 resultados
+        'alertas': alertas[:100],
         'filtros': {'nivel': nivel, 'tipo': tipo, 'visualizado': visualizado}
     })
 
@@ -248,13 +202,13 @@ def marcar_alerta_lido(request, alerta_id):
     messages.success(request, '✅ Alerta marcado como lido!')
     return redirect('lista_alertas')
 
-
 @login_required
 def relatorios(request):
     """Dashboard de relatórios"""
+    from django.db import models
+    
     idosos = Idoso.objects.filter(ativo=True)
     
-    # Estatísticas gerais
     total_alertas = Alerta.objects.count()
     alertas_criticos = Alerta.objects.filter(nivel='critico').count()
     media_frequencia = DadoSaude.objects.filter(
@@ -271,13 +225,12 @@ def relatorios(request):
 @login_required
 def exportar_dados(request):
     """Exporta dados em CSV"""
+    import csv
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="dados_idosos.csv"'
     
     writer = csv.writer(response)
-    writer.writerow(['Nome do Idoso', 'Data/Hora', 'Frequência Cardíaca', 
-                     'Pressão Arterial', 'Saturação O₂', 'Temperatura', 
-                     'Passos', 'Queda Detectada', 'Emergência'])
+    writer.writerow(['Nome', 'Data', 'Frequência', 'Pressão', 'Saturação', 'Temperatura', 'Passos', 'Queda', 'Emergência'])
     
     dados = DadoSaude.objects.select_related('idoso').order_by('-timestamp')[:10000]
     
@@ -295,3 +248,7 @@ def exportar_dados(request):
         ])
     
     return response
+
+def index(request):
+    """Página inicial pública"""
+    return render(request, 'monitoramento/index.html')

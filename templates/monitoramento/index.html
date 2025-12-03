@@ -1,11 +1,9 @@
-<!-- templates/monitoramento/index.html -->
 {% extends 'base.html' %}
 
 {% block title %}Monitoramento de Idosos - Início{% endblock %}
 
 {% block content %}
 <div class="container">
-    <!-- Hero Section -->
     <div class="row align-items-center py-5">
         <div class="col-lg-6">
             <h1 class="display-4 fw-bold text-primary mb-4">
@@ -46,8 +44,11 @@
                     <i class="fas fa-tachometer-alt me-2"></i>Acessar Dashboard
                 </a>
             {% else %}
-                <a href="/accounts/login/" class="btn btn-primary btn-lg">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
                     <i class="fas fa-sign-in-alt me-2"></i>Iniciar Monitoramento
+                </a>
+                <a href="{% url 'public_add_idoso' %}" class="btn btn-outline-success btn-lg ms-2">
+                    <i class="fas fa-user-plus me-2"></i>Registrar Idoso
                 </a>
             {% endif %}
         </div>

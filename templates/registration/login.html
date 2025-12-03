@@ -1,83 +1,67 @@
-{% extends 'base.html' %}
-
-{% block title %}Entrar - Monitoramento de Idosos{% endblock %}
-
-{% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-lg-5 col-md-7">
-        <div class="card shadow-lg">
-            <div class="card-header text-center bg-primary text-white py-4">
-                <h3 class="mb-0">
-                    <i class="fas fa-user-lock fa-2x mb-2 d-block"></i>
-                    Acesso Restrito
-                </h3>
-                <p class="mb-0">Monitoramento de Saúde de Idosos</p>
-            </div>
-            <div class="card-body p-5">
-                {% if form.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        <strong>Erro!</strong> Usuário ou senha inválidos.
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Monitoramento de Idosos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100vh; display: flex; align-items: center; }
+        .login-card { border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .login-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card login-card">
+                    <div class="card-header login-header text-center py-3">
+                        <h3 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Monitoramento</h3>
                     </div>
-                {% endif %}
-                
-                {% if next %}
-                    <div class="alert alert-warning" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Por favor, faça login para acessar esta página.
+                    <div class="card-body p-4">
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                Usuário ou senha inválidos.
+                            </div>
+                        {% endif %}
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group mb-3">
+                                <label class="form-label">Usuário</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" name="{{ form.username.name }}" class="form-control" placeholder="Digite seu usuário" required>
+                                </div>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label class="form-label">Senha</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" name="{{ form.password.name }}" class="form-control" placeholder="Digite sua senha" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 mb-3">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </button>
+                            <div class="text-center">
+                                <a href="{% url 'password_reset' %}" class="text-muted small">Esqueceu sua senha?</a>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+                        <div class="text-center">
+                            <small class="text-muted">
+                                Não tem acesso? <a href="{% url 'public_add_idoso' %}" class="fw-bold">Registre um idoso</a>
+                            </small>
+                        </div>
                     </div>
-                {% endif %}
-
-                <form method="post" action="{% url 'login' %}">
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <label for="{{ form.username.id_for_label }}" class="form-label fw-bold">
-                            <i class="fas fa-user me-2"></i>Usuário
-                        </label>
-                        <input type="text" 
-                               name="{{ form.username.name }}" 
-                               id="{{ form.username.id_for_label }}"
-                               class="form-control form-control-lg" 
-                               placeholder="Digite seu usuário"
-                               required>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="{{ form.password.id_for_label }}" class="form-label fw-bold">
-                            <i class="fas fa-lock me-2"></i>Senha
-                        </label>
-                        <input type="password" 
-                               name="{{ form.password.name }}" 
-                               id="{{ form.password.id_for_label }}"
-                               class="form-control form-control-lg" 
-                               placeholder="Digite sua senha"
-                               required>
-                    </div>
-                    
-                    <div class="d-grid gap-2 mb-4">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sign-in-alt me-2"></i>Entrar
-                        </button>
-                    </div>
-                    
-                    <input type="hidden" name="next" value="{{ next }}">
-                </form>
-                
-                <hr class="my-4">
-                
-                <div class="text-center">
-                    <p class="text-muted mb-2">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Usuário padrão: <strong>admin</strong>
-                    </p>
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-key me-1"></i>
-                        Senha padrão: <strong>Admin123!</strong>
-                    </p>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+</body>
+</html>

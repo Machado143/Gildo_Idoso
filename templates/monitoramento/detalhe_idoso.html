@@ -1,65 +1,177 @@
 {% extends 'base.html' %}
+
+{% block title %}{{ idoso.nome }}{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
-  <h1>{{ idoso.nome }}</h1>
-  
-  <!-- Gráfico de Frequência Cardíaca -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Frequência Cardíaca - Últimas 24h</h5>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-user text-primary me-2"></i>
+                {{ idoso.nome }}
+            </h1>
+            <p class="text-muted mb-0">
+                Idade: {{ idoso.idade }} anos | CPF: {{ idoso.cpf }} | 
+                {% if idoso.ativo %}<span class="badge bg-success">Ativo</span>{% else %}<span class="badge bg-warning">Pendente</span>{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'adicionar_dispositivo' idoso.id %}" class="btn btn-info me-2">
+                <i class="fas fa-plus me-1"></i>Dispositivo
+            </a>
+            <a href="{% url 'editar_idoso' idoso.id %}" class="btn btn-warning me-2">
+                <i class="fas fa-edit me-1"></i>Editar
+            </a>
+            <a href="{% url 'lista_idosos' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Voltar
+            </a>
+        </div>
     </div>
-    <div class="card-body">
-      <canvas id="frequenciaChart" width="400" height="150"></canvas>
+    
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Dados Recentes -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line text-info me-2"></i>
+                        Dados das Últimas 24 Horas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if dados_recentes %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Hora</th>
+                                        <th>FC</th>
+                                        <th>Pressão</th>
+                                        <th>Sat O₂</th>
+                                        <th>Temp.</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for dado in dados_recentes %}
+                                        <tr>
+                                            <td>{{ dado.timestamp|time:"H:i" }}</td>
+                                            <td>{{ dado.frequencia_cardiaca }} bpm</td>
+                                            <td>{{ dado.pressao_arterial }}</td>
+                                            <td>{{ dado.saturacao_oxigenio }}%</td>
+                                            <td>{{ dado.temperatura }}°C</td>
+                                            <td>
+                                                {% if dado.queda_detectada %}
+                                                    <span class="badge bg-danger">Queda</span>
+                                                {% elif dado.botao_emergencia %}
+                                                    <span class="badge bg-warning">Botão</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Normal</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <a href="{% url 'historico_dados' idoso.id %}" class="btn btn-outline-primary btn-sm mt-3">
+                            <i class="fas fa-history me-1"></i>Ver Histórico Completo
+                        </a>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <p>Nenhum dado nas últimas 24 horas</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Dispositivos -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-watch text-info me-2"></i>
+                        Dispositivos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if dispositivos %}
+                        <ul class="list-group">
+                            {% for dispositivo in dispositivos %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ dispositivo.get_tipo_display }}</strong><br>
+                                        <small class="text-muted">{{ dispositivo.modelo }} | Série: {{ dispositivo.numero_serie }}</small>
+                                    </div>
+                                    <span class="badge bg-{% if dispositivo.ativo %}success{% else %}danger{% endif %}">
+                                        {{ dispositivo.get_ativo_display }}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <p>Nenhum dispositivo cadastrado</p>
+                            <a href="{% url 'adicionar_dispositivo' idoso.id %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-plus me-1"></i>Adicionar Primeiro
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Alertas Recentes -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Alertas Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if alertas_recentes %}
+                        <div class="list-group list-group-flush">
+                            {% for alerta in alertas_recentes %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="badge bg-{{ alerta.nivel }}">{{ alerta.get_nivel_display }}</span>
+                                        <small class="text-muted">{{ alerta.timestamp|date:"d/m" }}</small>
+                                    </div>
+                                    <p class="mb-0 mt-1 small">{{ alerta.mensagem }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">Sem alertas recentes</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Histórico Médico -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-medical text-success me-2"></i>
+                        Histórico Médico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if historico %}
+                        <ul class="list-unstyled">
+                            {% for consulta in historico %}
+                                <li class="mb-2">
+                                    <strong>{{ consulta.tipo_consulta }}</strong><br>
+                                    <small class="text-muted">{{ consulta.data_consulta|date:"d/m/Y" }} - Dr. {{ consulta.medico }}</small>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted text-center py-3">Nenhuma consulta registrada</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  
-  <!-- Tabela de Dados -->
-  <div class="table-responsive">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Data/Hora</th>
-          <th>Frequência</th>
-          <th>Pressão</th>
-          <th>Saturação</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for dado in dados_recentes %}
-        <tr>
-          <td>{{ dado.timestamp|date:"d/m/Y H:i" }}</td>
-          <td>{{ dado.frequencia_cardiaca }} bpm</td>
-          <td>{{ dado.pressao_arterial }}</td>
-          <td>{{ dado.saturacao_oxigenio }}%</td>
-          <td>
-            {% if dado.queda_detectada %}
-              <span class="badge bg-danger">Emergência</span>
-            {% else %}
-              <span class="badge bg-success">Normal</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
 </div>
-
-<script>
-  // Script para gerar gráfico com Chart.js
-  const ctx = document.getElementById('frequenciaChart').getContext('2d');
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [{% for dado in dados_recentes %}'{{ dado.timestamp|date:"H:i" }}',{% endfor %}],
-      datasets: [{
-        label: 'Frequência Cardíaca',
-        data: [{% for dado in dados_recentes %}{{ dado.frequencia_cardiaca|default:"null" }},{% endfor %}],
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-      }]
-    }
-  });
-</script>
 {% endblock %}

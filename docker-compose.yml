@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   web:
     build: .
@@ -7,21 +8,61 @@ services:
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/idosos_db
       - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=django-insecure-local-key-change-in-production
+      - DEBUG=True
+      - EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
     depends_on:
       - db
       - redis
+    command: python manage.py runserver 0.0.0.0:8000
+
   db:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: idosos_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   redis:
     image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   celery:
     build: .
     command: celery -A idosos_monitoramento worker -l info
     environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/idosos_db
       - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=django-insecure-local-key-change-in-production
+      - DEBUG=True
+    volumes:
+      - .:/app
     depends_on:
+      - db
       - redis
+
+  celery-beat:
+    build: .
+    command: celery -A idosos_monitoramento beat -l info
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/idosos_db
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=django-insecure-local-key-change-in-production
+      - DEBUG=True
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  static_volume:
