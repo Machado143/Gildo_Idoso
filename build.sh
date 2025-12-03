@@ -30,7 +30,7 @@ if not User.objects.filter(username='admin').exists():
     User.objects.create_superuser(
         username='admin',
         email='admin@monitoramento.com',
-        password='Admin123!
+        password='Admin123!'
     )
     print('✅ Superusuário criado: admin / Admin123!')
 else:
