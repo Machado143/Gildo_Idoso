@@ -1,0 +1,63 @@
+<!-- templates/monitoramento/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}Monitoramento de Idosos - Início{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold text-primary mb-4">
+                Monitoramento de Saúde para Idosos
+            </h1>
+            <p class="lead mb-4">
+                Uma solução completa e acessível para monitorar a saúde de idosos em tempo real, 
+                proporcionando tranquilidade para familiares e cuidadores.
+            </p>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-heartbeat fa-2x text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 fw-bold">Monitoramento Contínuo</h6>
+                            <small class="text-muted">Dados vitais em tempo real</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-bell fa-2x text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 fw-bold">Alertas Imediatos</h6>
+                            <small class="text-muted">Notificações de emergência</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if user.is_authenticated %}
+                <a href="/dashboard/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-tachometer-alt me-2"></i>Acessar Dashboard
+                </a>
+            {% else %}
+                <a href="/accounts/login/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Monitoramento
+                </a>
+            {% endif %}
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="text-center">
+                <img src="https://via.placeholder.com/500x400/6f42c1/ffffff?text=Monitoramento+de+Idosos" 
+                     alt="Monitoramento de Idosos" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
