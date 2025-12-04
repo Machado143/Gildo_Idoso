@@ -853,8 +853,8 @@ def gerar_relatorio_pdf_geral(request):
     return response
 
 @staff_member_required
-def gerar_dados_view(request):
-    """View simples para gerar dados fictícios (apenas staff)"""
+def gerar_dados_ficticios_view(request):
+    """Gera dados fictícios via interface web (apenas staff)"""
     if request.method == 'POST':
         try:
             idosos = int(request.POST.get('idosos', 5))
@@ -864,4 +864,4 @@ def gerar_dados_view(request):
         except Exception as e:
             messages.error(request, f'❌ Erro: {str(e)}')
     
-    return redirect('dashboard')  # Redireciona para o dashboard
+    return redirect('dashboard')

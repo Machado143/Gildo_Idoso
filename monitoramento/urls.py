@@ -38,5 +38,5 @@ urlpatterns = [
     path('relatorios/pdf/geral/', views.gerar_relatorio_pdf_geral, name='relatorio_pdf_geral'),
 
     # Gerar dados fictícios (apenas para administradores)
-    path('gerar-dados/', views.gerar_dados_view, name='gerar_dados'),
+    path('gerar-dados/', views.gerar_dados_ficticios_view, name='gerar_dados'),
 ]
