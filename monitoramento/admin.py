@@ -86,9 +86,4 @@ def get_admin_urls():
     ]
     return urls
 
-# Registrar os modelos normais
-admin.site.register(Idoso, IdosoAdmin)
-admin.site.register(Dispositivo, DispositivoAdmin)
-admin.site.register(DadoSaude, DadoSaudeAdmin)
-admin.site.register(Alerta, AlertaAdmin)
-admin.site.register(HistoricoSaude, HistoricoSaudeAdmin)
+
