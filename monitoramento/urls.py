@@ -39,4 +39,7 @@ urlpatterns = [
 
     # Gerar dados fictícios (apenas para administradores)
     path('gerar-dados/', views.gerar_dados_ficticios_view, name='gerar_dados'),
+
+    # Deletar idoso
+    path('idosos/<int:idoso_id>/deletar/', views.deletar_idoso, name='deletar_idoso'),
 ]

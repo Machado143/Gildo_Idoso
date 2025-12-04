@@ -224,6 +224,17 @@ def lista_idosos(request):
     return render(request, 'monitoramento/lista_idosos.html', {'idosos': idosos})
 
 @login_required
+def deletar_idoso(request, idoso_id):
+    """Deleta um idoso do sistema"""
+    idoso = get_object_or_404(Idoso, id=idoso_id)
+    if request.method == 'POST':
+        nome = idoso.nome
+        idoso.delete()
+        messages.success(request, f'✅ Idoso {nome} removido com sucesso!')
+        return redirect('lista_idosos')
+    return redirect('lista_idosos')
+
+@login_required
 def detalhe_idoso(request, idoso_id):
     """Detalhes de um idoso específico com seus dados de saúde"""
     idoso = get_object_or_404(Idoso, id=idoso_id)

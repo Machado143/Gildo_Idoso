@@ -5,6 +5,11 @@ from monitoramento.models import Idoso, Dispositivo, DadoSaude, Alerta
 from django.utils import timezone
 from datetime import timedelta
 
+def gerar_cpf():
+    """Gera um CPF fictício aleatório."""
+    cpf = ''.join(str(random.randint(0, 9)) for _ in range(11))
+    return f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
+
 class Command(BaseCommand):
     help = 'Gera dados fictícios para testes'
 
@@ -17,10 +22,13 @@ class Command(BaseCommand):
         
         for i in range(options['idosos']):
             # Criar idoso
+            cpf = gerar_cpf()
+            while Idoso.objects.filter(cpf=cpf).exists():
+                cpf = gerar_cpf()
             idoso = Idoso.objects.create(
                 nome=f'Idoso Teste {i+1}',
                 data_nascimento=timezone.now() - timedelta(days=365*70 + random.randint(0, 365*10)),
-                cpf=f'000.000.000-{i:02d}',
+                cpf=cpf,
                 endereco=f'Rua Teste, {i+100} - Cidade',
                 nome_responsavel=f'Responsável {i+1}',
                 telefone_responsavel=f'(11) 9{random.randint(1000, 9999)}-{random.randint(1000, 9999)}',

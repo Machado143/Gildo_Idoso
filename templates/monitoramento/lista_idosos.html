@@ -56,12 +56,20 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{% url 'detalhe_idoso' idoso.id %}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{% url 'editar_idoso' idoso.id %}" class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'detalhe_idoso' idoso.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'editar_idoso' idoso.id %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" action="{% url 'deletar_idoso' idoso.id %}" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir {{ idoso.nome }}? Esta ação não pode ser desfeita.')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             {% endfor %}
