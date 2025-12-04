@@ -230,7 +230,7 @@ def deletar_idoso(request, idoso_id):
     if request.method == 'POST':
         nome = idoso.nome
         idoso.delete()
-        messages.success(request, f'✅ Idoso {nome} removido com sucesso!')
+        messages.success(request, f'Idoso {nome} removido com sucesso!')
         return redirect('lista_idosos')
     return redirect('lista_idosos')
 
