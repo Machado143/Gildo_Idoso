@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Idoso, Dispositivo, DadoSaude, Alerta, HistoricoSaude
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.management import call_command
+
 
 @admin.register(Idoso)
 class IdosoAdmin(admin.ModelAdmin):
@@ -46,3 +50,16 @@ class HistoricoSaudeAdmin(admin.ModelAdmin):
     list_display = ['idoso', 'data_consulta', 'tipo_consulta', 'medico']
     list_filter = ['data_consulta', 'tipo_consulta']
     search_fields = ['idoso__nome', 'medico', 'diagnostico']
+
+@admin.site.register_view('gerar-dados-ficticios', 'Gerar Dados Fictícios')
+def gerar_dados_admin(request):
+    if request.method == 'POST':
+        idosos = request.POST.get('idosos', 5)
+        dias = request.POST.get('dias', 7)
+        try:
+            call_command('gerar_dados_ficticios', idosos=idosos, dias=dias)
+            messages.success(request, '✅ Dados gerados com sucesso!')
+        except Exception as e:
+            messages.error(request, f'❌ Erro: {str(e)}')
+        return redirect('..')
+    return render(request, 'admin/gerar_dados.html')

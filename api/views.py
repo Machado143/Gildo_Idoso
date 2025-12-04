@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
 import random
-
+from django.http import JsonResponse
 from monitoramento.models import Idoso, Dispositivo, DadoSaude, Alerta, HistoricoSaude
 from .serializers import *
 
@@ -148,4 +148,32 @@ def api_docs(request):
         },
         'autenticacao': 'Token ou Session Auth',
         'documentacao': 'Use /api/ para testar endpoints'
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_alertas_emergencia(request):
+    """Retorna alertas de emergência não visualizados para atualização em tempo real"""
+    idoso_id = request.GET.get('idoso')
+    
+    alertas = Alerta.objects.filter(
+        visualizado=False,
+        nivel='critico'
+    ).order_by('-timestamp')[:10]
+    
+    if idoso_id:
+        alertas = alertas.filter(idoso_id=idoso_id)
+    
+    return JsonResponse({
+        'emergencias': [{
+            'id': alerta.id,
+            'idoso_nome': alerta.idoso.nome,
+            'idoso_id': alerta.idoso.id,
+            'tipo': alerta.get_tipo_display(),
+            'mensagem': alerta.mensagem,
+            'timestamp': alerta.timestamp.strftime('%d/%m/%Y %H:%M:%S'),
+            'queda': alerta.tipo == 'queda',
+            'emergencia': alerta.tipo == 'emergencia',
+        } for alerta in alertas]
     })

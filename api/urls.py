@@ -12,4 +12,5 @@ router.register(r'historico', HistoricoSaudeViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('docs/', api_docs, name='api-docs'),
+    path('alertas/emergencia/', api_alertas_emergencia, name='api_alertas_emergencia'),
 ]

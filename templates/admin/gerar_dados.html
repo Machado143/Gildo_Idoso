@@ -1,0 +1,20 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+<div class="container-fluid">
+    <h1>Gerar Dados Fictícios</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label>Quantidade de Idosos:</label>
+            <input type="number" name="idosos" class="form-control" value="5" min="1" max="50">
+        </div>
+        <div class="mb-3">
+            <label>Dias de Histórico:</label>
+            <input type="number" name="dias" class="form-control" value="7" min="1" max="90">
+        </div>
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-magic"></i> Gerar Dados
+        </button>
+    </form>
+</div>
+{% endblock %}

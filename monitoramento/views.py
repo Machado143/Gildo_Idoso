@@ -55,53 +55,101 @@ def index(request):
 # ==========================================
 @login_required
 def dashboard(request):
-    """Dashboard principal com dados para gráficos"""
-    idosos = Idoso.objects.filter(ativo=True)
-    
-    # Estatísticas gerais
-    total_idosos = idosos.count()
-    dispositivos_ativos = Dispositivo.objects.filter(ativo=True).count()
-    alertas_recentes = Alerta.objects.filter(visualizado=False).count()
-    
-    # Últimos dados de saúde
-    ultimos_dados = DadoSaude.objects.select_related('idoso').order_by('-timestamp')[:10]
-    
-    # Alertas não visualizados
-    alertas_pendentes = Alerta.objects.filter(visualizado=False).order_by('-timestamp')[:5]
+    """
+    Dashboard principal com:
+    - Geração de dados fictícios via parâmetro
+    - Filtro de idoso nos gráficos e métricas
+    - Verificação automática de emergências
+    """
     
     # ==========================================
-    # DADOS PARA OS GRÁFICOS (ADICIONE ISTO)
+    # 1. GERAR DADOS FICTÍCIOS (SE SOLICITADO)
+    # ==========================================
+    if request.GET.get('gerar_dados') == 'true':
+        try:
+            from monitoramento.management.commands.gerar_dados_ficticios import Command
+            cmd = Command()
+            cmd.handle(idosos=3, dias=7)  # Gera 3 idosos com 7 dias de histórico
+            messages.success(request, '✅ Dados fictícios gerados com sucesso!')
+        except Exception as e:
+            messages.error(request, f'❌ Erro ao gerar dados: {str(e)}')
+        return redirect('dashboard')  # Redireciona para limpar a URL
+    
+    # ==========================================
+    # 2. FILTRO DE IDOSO
+    # ==========================================
+    idoso_id = request.GET.get('idoso')
+    idosos_list = Idoso.objects.filter(ativo=True).order_by('nome')
+    idoso_selecionado = None
+    
+    # Base queries
+    base_dados = DadoSaude.objects.select_related('idoso')
+    base_alertas = Alerta.objects.all()
+    
+    # Filtrar se idoso específico for selecionado
+    if idoso_id:
+        idoso_selecionado = get_object_or_404(Idoso, id=idoso_id, ativo=True)
+        base_dados = base_dados.filter(idoso=idoso_selecionado)
+        base_alertas = base_alertas.filter(idoso=idoso_selecionado)
+    
+    # ==========================================
+    # 3. MÉTRICAS GERAIS (FILTRADAS)
+    # ==========================================
+    total_idosos = idosos_list.count()
+    dispositivos_ativos = Dispositivo.objects.filter(
+        ativo=True,
+        idoso__in=idosos_list
+    ).count()
+    
+    # Se filtrado por idoso, mostra apenas alertas desse idoso
+    alertas_recentes = base_alertas.filter(visualizado=False).count()
+    
+    # Últimos dados de saúde (máximo 10)
+    ultimos_dados = base_dados.order_by('-timestamp')[:10]
+    
+    # Alertas não visualizados (máximo 5)
+    alertas_pendentes = base_alertas.filter(visualizado=False).order_by('-timestamp')[:5]
+    
+    # ==========================================
+    # 4. DADOS PARA OS GRÁFICOS (FILTRADOS)
     # ==========================================
     
-    # Gráfico de Frequência (últimas 24h)
-    labels_fc, dados_fc = [], []
-    for i in range(6, 0, -1):
-        inicio = timezone.now() - timedelta(hours=i*4)
-        media = DadoSaude.objects.filter(
-            timestamp__gte=inicio,
-            frequencia_cardiaca__isnull=False
-        ).aggregate(media=Avg('frequencia_cardiaca'))['media']
-        dados_fc.append(round(media) if media else 0)
-        labels_fc.append(inicio.strftime('%Hh'))
+    def get_dados_grafico(campo, horas=24, agregador=Avg):
+        """Função helper para gerar dados de gráfico filtrados"""
+        dados, labels = [], []
+        for i in range(6, 0, -1):
+            inicio = timezone.now() - timedelta(hours=i*4)
+            fim = timezone.now() - timedelta(hours=(i-1)*4)
+            
+            queryset = DadoSaude.objects.filter(
+                timestamp__gte=inicio,
+                timestamp__lt=fim,
+                **{f'{campo}__isnull': False}
+            )
+            
+            # Filtrar por idoso se selecionado
+            if idoso_selecionado:
+                queryset = queryset.filter(idoso=idoso_selecionado)
+            
+            resultado = queryset.aggregate(resultado=agregador(campo))['resultado']
+            dados.append(round(resultado) if resultado else 0)
+            labels.append(inicio.strftime('%Hh'))
+        return labels, dados
     
-    # Gráfico de Pressão
-    labels_pressao, dados_sistolica, dados_diastolica = [], [], []
-    for i in range(6, 0, -1):
-        inicio = timezone.now() - timedelta(hours=i*4)
-        media_sis = DadoSaude.objects.filter(
-            timestamp__gte=inicio,
-            pressao_sistolica__isnull=False
-        ).aggregate(media=Avg('pressao_sistolica'))['media']
-        media_dias = DadoSaude.objects.filter(
-            timestamp__gte=inicio,
-            pressao_diastolica__isnull=False
-        ).aggregate(media=Avg('pressao_diastolica'))['media']
-        dados_sistolica.append(round(media_sis) if media_sis else 0)
-        dados_diastolica.append(round(media_dias) if media_dias else 0)
-        labels_pressao.append(inicio.strftime('%Hh'))
+    # Gráfico de Frequência Cardíaca
+    labels_fc, dados_fc = get_dados_grafico('frequencia_cardiaca')
     
-    # Gráfico de Alertas
-    alertas_por_tipo = Alerta.objects.values('tipo').annotate(
+    # Gráfico de Pressão Arterial
+    labels_pressao, dados_sistolica = get_dados_grafico('pressao_sistolica')
+    _, dados_diastolica = get_dados_grafico('pressao_diastolica')
+    
+    # Gráfico de Alertas por Tipo
+    if idoso_selecionado:
+        alertas_por_tipo = Alerta.objects.filter(idoso=idoso_selecionado)
+    else:
+        alertas_por_tipo = Alerta.objects.all()
+    
+    alertas_por_tipo = alertas_por_tipo.values('tipo').annotate(
         total=Count('id')
     ).order_by('-total')[:5]
     labels_alertas = [a['tipo'].replace('_', ' ').title() for a in alertas_por_tipo]
@@ -113,21 +161,43 @@ def dashboard(request):
         dia = timezone.now() - timedelta(days=i)
         inicio_dia = dia.replace(hour=0, minute=0, second=0)
         fim_dia = dia.replace(hour=23, minute=59, second=59)
-        total = DadoSaude.objects.filter(
+        
+        queryset = DadoSaude.objects.filter(
             timestamp__gte=inicio_dia,
             timestamp__lte=fim_dia,
             passos__isnull=False
-        ).aggregate(media=Avg('passos'))['media']
-        dados_passos.append(round(total) if total else 0)
+        )
+        
+        if idoso_selecionado:
+            queryset = queryset.filter(idoso=idoso_selecionado)
+        
+        media = queryset.aggregate(media=Avg('passos'))['media']
+        dados_passos.append(round(media) if media else 0)
         labels_passos.append(dia.strftime('%a'))
     
+    # ==========================================
+    # 5. VERIFICAR EMERGÊNCIAS RECENTES
+    # ==========================================
+    ultima_emergencia = base_alertas.filter(
+        nivel='critico',
+        visualizado=False
+    ).order_by('-timestamp').first()
+    
+    # Flag para JS saber se deve iniciar verificação automática
+    tem_emergencia = ultima_emergencia is not None
+    
+    # ==========================================
+    # 6. CONTEXT FINAL
+    # ==========================================
     context = {
-        'idosos': idosos,
+        'idosos': idosos_list,
         'total_idosos': total_idosos,
         'dispositivos_ativos': dispositivos_ativos,
         'alertas_recentes': alertas_recentes,
         'ultimos_dados': ultimos_dados,
         'alertas_pendentes': alertas_pendentes,
+        
+        # Dados dos gráficos
         'chart_labels_fc': labels_fc,
         'chart_dados_fc': dados_fc,
         'chart_labels_pressao': labels_pressao,
@@ -137,9 +207,17 @@ def dashboard(request):
         'chart_dados_alertas': dados_alertas,
         'chart_labels_passos': labels_passos,
         'chart_dados_passos': dados_passos,
+        
+        # Filtro de idoso
+        'idosos_list': idosos_list,
+        'idoso_selecionado': idoso_selecionado,
+        
+        # Controle de emergências
+        'tem_emergencia': tem_emergencia,
+        'ultimo_alerta_id': ultima_emergencia.id if ultima_emergencia else 0,
     }
+    
     return render(request, 'monitoramento/dashboard.html', context)
-
 @login_required
 def lista_idosos(request):
     """Lista todos os idosos cadastrados"""
