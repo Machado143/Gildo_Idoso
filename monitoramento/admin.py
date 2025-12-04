@@ -4,7 +4,8 @@ from .models import Idoso, Dispositivo, DadoSaude, Alerta, HistoricoSaude
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.management import call_command
-
+from django.urls import path
+from django.http import HttpResponseRedirect
 
 @admin.register(Idoso)
 class IdosoAdmin(admin.ModelAdmin):
@@ -51,15 +52,43 @@ class HistoricoSaudeAdmin(admin.ModelAdmin):
     list_filter = ['data_consulta', 'tipo_consulta']
     search_fields = ['idoso__nome', 'medico', 'diagnostico']
 
-@admin.site.register_view('gerar-dados-ficticios', 'Gerar Dados Fictícios')
-def gerar_dados_admin(request):
+# View para gerar dados fictícios
+def gerar_dados_ficticios_view(request):
     if request.method == 'POST':
-        idosos = request.POST.get('idosos', 5)
-        dias = request.POST.get('dias', 7)
         try:
+            idosos = int(request.POST.get('idosos', 5))
+            dias = int(request.POST.get('dias', 7))
             call_command('gerar_dados_ficticios', idosos=idosos, dias=dias)
-            messages.success(request, '✅ Dados gerados com sucesso!')
+            messages.success(request, f'✅ Dados fictícios gerados: {idosos} idosos, {dias} dias!')
         except Exception as e:
-            messages.error(request, f'❌ Erro: {str(e)}')
-        return redirect('..')
-    return render(request, 'admin/gerar_dados.html')
+            messages.error(request, f'❌ Erro ao gerar dados: {str(e)}')
+        return redirect('admin:gerar_dados_ficticios')
+    
+    context = {
+        'title': 'Gerar Dados Fictícios',
+    }
+    return render(request, 'admin/gerar_dados.html', context)
+
+# Classe Admin customizada
+class MonitoramentoAdminSite(admin.AdminSite):
+    site_header = "Monitoramento de Idosos"
+    site_title = "Administração"
+    index_title = "Painel de Controle"
+
+# Criar instância customizada
+admin_site = MonitoramentoAdminSite(name='monitoramento-admin')
+
+# Adicionar a URL customizada
+def get_admin_urls():
+    from django.urls import path
+    urls = [
+        path('gerar-dados/', gerar_dados_ficticios_view, name='gerar_dados_ficticios'),
+    ]
+    return urls
+
+# Registrar os modelos normais
+admin.site.register(Idoso, IdosoAdmin)
+admin.site.register(Dispositivo, DispositivoAdmin)
+admin.site.register(DadoSaude, DadoSaudeAdmin)
+admin.site.register(Alerta, AlertaAdmin)
+admin.site.register(HistoricoSaude, HistoricoSaudeAdmin)

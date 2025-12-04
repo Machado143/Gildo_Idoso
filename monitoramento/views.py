@@ -1,8 +1,3 @@
-# ==========================================
-# MONITORAMENTO/VIEWS.PY - ORGANIZADO POR BLOCOS
-# ==========================================
-
-# 1. IMPORTS PADRÃO DJANGO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -13,6 +8,10 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import Avg, Count, Min, Max
 from datetime import datetime, timedelta
 import csv
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.core.management import call_command
 
 # 2. IMPORTS DE MODELS E FORMS DO PROJETO
 from .models import Idoso, Dispositivo, DadoSaude, Alerta, HistoricoSaude
@@ -852,3 +851,17 @@ def gerar_relatorio_pdf_geral(request):
     response.write(pdf)
     
     return response
+
+@staff_member_required
+def gerar_dados_view(request):
+    """View simples para gerar dados fictícios (apenas staff)"""
+    if request.method == 'POST':
+        try:
+            idosos = int(request.POST.get('idosos', 5))
+            dias = int(request.POST.get('dias', 7))
+            call_command('gerar_dados_ficticios', idosos=idosos, dias=dias)
+            messages.success(request, f'✅ Dados fictícios gerados com sucesso!')
+        except Exception as e:
+            messages.error(request, f'❌ Erro: {str(e)}')
+    
+    return redirect('dashboard')  # Redireciona para o dashboard
