@@ -24,6 +24,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.units import inch
 
 # ==========================================
 # 4. VIEWS PÚBLICAS (SEM LOGIN)

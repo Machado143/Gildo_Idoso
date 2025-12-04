@@ -7,9 +7,13 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
 import random
+import logging
 from django.http import JsonResponse
 from monitoramento.models import Idoso, Dispositivo, DadoSaude, Alerta, HistoricoSaude
 from .serializers import *
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 class StandardPagination(PageNumberPagination):
     page_size = 10
