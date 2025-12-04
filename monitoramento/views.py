@@ -1,24 +1,34 @@
+# ==========================================
+# MONITORAMENTO/VIEWS.PY - ORGANIZADO POR BLOCOS
+# ==========================================
+
+# 1. IMPORTS PADRÃO DJANGO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
-from datetime import datetime, timedelta
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
-from django.db.models import Avg, Count, Min, Max  # Importações para agregações
+from django.db.models import Avg, Count, Min, Max
+from datetime import datetime, timedelta
+import csv
+
+# 2. IMPORTS DE MODELS E FORMS DO PROJETO
 from .models import Idoso, Dispositivo, DadoSaude, Alerta, HistoricoSaude
 from .forms import IdosoForm, DispositivoForm
-import csv
-from django.http import HttpResponse
 
-# Imports para PDF
+# 3. IMPORTS DE TERCEIROS (PDF)
 import io
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.lib.enums import TA_CENTER
+
+# ==========================================
+# 4. VIEWS PÚBLICAS (SEM LOGIN)
+# ==========================================
 
 @require_http_methods(["GET", "POST"])
 def public_add_idoso(request):
@@ -36,9 +46,13 @@ def public_add_idoso(request):
     
     return render(request, 'monitoramento/registrar_idoso_publico.html', {'form': form})
 
-# ====================================================================================
-# VIEWS PRINCIPAIS
-# ====================================================================================
+def index(request):
+    """Página inicial pública"""
+    return render(request, 'monitoramento/index.html')
+
+# ==========================================
+# 5. VIEWS AUTENTICADAS (LOGIN REQUIRED)
+# ==========================================
 
 @login_required
 def dashboard(request):
@@ -56,71 +70,6 @@ def dashboard(request):
     # Alertas não visualizados
     alertas_pendentes = Alerta.objects.filter(visualizado=False).order_by('-timestamp')[:5]
     
-    # DADOS PARA GRÁFICOS - Últimas 24 horas
-    vinte_quatro_horas_ago = timezone.now() - timedelta(hours=24)
-    
-    # Dados de Frequência Cardíaca (última 24h, agrupados de 4 em 4 horas)
-    dados_fc = []
-    labels_fc = []
-    for i in range(6, 0, -1):
-        inicio = timezone.now() - timedelta(hours=i*4)
-        fim = timezone.now() - timedelta(hours=(i-1)*4)
-        media = DadoSaude.objects.filter(
-            timestamp__gte=inicio,
-            timestamp__lt=fim,
-            frequencia_cardiaca__isnull=False
-        ).aggregate(Avg('frequencia_cardiaca'))['frequencia_cardiaca__avg']
-        
-        dados_fc.append(round(media) if media else 0)
-        labels_fc.append(inicio.strftime('%Hh'))
-    
-    # Dados de Pressão Arterial
-    dados_sistolica = []
-    dados_diastolica = []
-    for i in range(6, 0, -1):
-        inicio = timezone.now() - timedelta(hours=i*4)
-        fim = timezone.now() - timedelta(hours=(i-1)*4)
-        
-        media_sistolica = DadoSaude.objects.filter(
-            timestamp__gte=inicio,
-            timestamp__lt=fim,
-            pressao_sistolica__isnull=False
-        ).aggregate(Avg('pressao_sistolica'))['pressao_sistolica__avg']
-        
-        media_diastolica = DadoSaude.objects.filter(
-            timestamp__gte=inicio,
-            timestamp__lt=fim,
-            pressao_diastolica__isnull=False
-        ).aggregate(Avg('pressao_diastolica'))['pressao_diastolica__avg']
-        
-        dados_sistolica.append(round(media_sistolica) if media_sistolica else 0)
-        dados_diastolica.append(round(media_diastolica) if media_diastolica else 0)
-    
-    # Distribuição de Alertas por Tipo
-    alertas_por_tipo = Alerta.objects.values('tipo').annotate(
-        total=Count('id')
-    ).order_by('-total')[:5]
-    
-    labels_alertas = [a['tipo'].replace('_', ' ').title() for a in alertas_por_tipo]
-    dados_alertas = [a['total'] for a in alertas_por_tipo]
-    
-    # Atividade Física (Passos) - Últimos 7 dias
-    labels_passos = []
-    dados_passos = []
-    for i in range(6, -1, -1):
-        dia = timezone.now() - timedelta(days=i)
-        inicio_dia = dia.replace(hour=0, minute=0, second=0)
-        fim_dia = dia.replace(hour=23, minute=59, second=59)
-        
-        total_passos = DadoSaude.objects.filter(
-            timestamp__gte=inicio_dia,
-            timestamp__lte=fim_dia,
-            passos__isnull=False
-        ).aggregate(Avg('passos'))['passos__avg']
-        
-        labels_passos.append(dia.strftime('%a'))
-        dados_passos.append(round(total_passos) if total_passos else 0)
-    
     context = {
         'idosos': idosos,
         'total_idosos': total_idosos,
@@ -128,24 +77,178 @@ def dashboard(request):
         'alertas_recentes': alertas_recentes,
         'ultimos_dados': ultimos_dados,
         'alertas_pendentes': alertas_pendentes,
-        
-        # Dados para gráficos
-        'chart_labels_fc': labels_fc,
-        'chart_dados_fc': dados_fc,
-        'chart_labels_pressao': labels_fc,
-        'chart_dados_sistolica': dados_sistolica,
-        'chart_dados_diastolica': dados_diastolica,
-        'chart_labels_alertas': labels_alertas,
-        'chart_dados_alertas': dados_alertas,
-        'chart_labels_passos': labels_passos,
-        'chart_dados_passos': dados_passos,
     }
     return render(request, 'monitoramento/dashboard.html', context)
 
 @login_required
+def lista_idosos(request):
+    """Lista todos os idosos cadastrados"""
+    idosos = Idoso.objects.all().order_by('nome')
+    return render(request, 'monitoramento/lista_idosos.html', {'idosos': idosos})
+
+@login_required
+def detalhe_idoso(request, idoso_id):
+    """Detalhes de um idoso específico com seus dados de saúde"""
+    idoso = get_object_or_404(Idoso, id=idoso_id)
+    
+    # Dados recentes (últimas 24 horas)
+    vinte_quatro_horas_ago = timezone.now() - timedelta(hours=24)
+    dados_recentes = DadoSaude.objects.filter(
+        idoso=idoso, 
+        timestamp__gte=vinte_quatro_horas_ago
+    ).order_by('-timestamp')
+    
+    # Dispositivos do idoso
+    dispositivos = Dispositivo.objects.filter(idoso=idoso)
+    
+    # Alertas recentes
+    alertas_recentes = Alerta.objects.filter(idoso=idoso).order_by('-timestamp')[:10]
+    
+    # Histórico médico
+    historico = HistoricoSaude.objects.filter(idoso=idoso).order_by('-data_consulta')[:5]
+    
+    context = {
+        'idoso': idoso,
+        'dados_recentes': dados_recentes,
+        'dispositivos': dispositivos,
+        'alertas_recentes': alertas_recentes,
+        'historico': historico,
+    }
+    return render(request, 'monitoramento/detalhe_idoso.html', context)
+
+@login_required
+def adicionar_idoso(request):
+    """Adicionar novo idoso ao sistema"""
+    if request.method == 'POST':
+        form = IdosoForm(request.POST)
+        if form.is_valid():
+            idoso = form.save()
+            messages.success(request, f'✅ Idoso {idoso.nome} cadastrado com sucesso!')
+            return redirect('lista_idosos')
+    else:
+        form = IdosoForm()
+    
+    return render(request, 'monitoramento/adicionar_idoso.html', {'form': form})
+
+@login_required
+def editar_idoso(request, idoso_id):
+    """Editar informações de um idoso"""
+    idoso = get_object_or_404(Idoso, id=idoso_id)
+    
+    if request.method == 'POST':
+        form = IdosoForm(request.POST, instance=idoso)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'✅ Dados de {idoso.nome} atualizados!')
+            return redirect('detalhe_idoso', idoso_id=idoso.id)
+    else:
+        form = IdosoForm(instance=idoso)
+    
+    return render(request, 'monitoramento/editar_idoso.html', {'form': form, 'idoso': idoso})
+
+@login_required
+def adicionar_dispositivo(request, idoso_id):
+    """Adicionar dispositivo a um idoso"""
+    idoso = get_object_or_404(Idoso, id=idoso_id)
+    
+    if request.method == 'POST':
+        form = DispositivoForm(request.POST)
+        if form.is_valid():
+            dispositivo = form.save(commit=False)
+            dispositivo.idoso = idoso
+            dispositivo.save()
+            messages.success(request, '✅ Dispositivo cadastrado com sucesso!')
+            return redirect('detalhe_idoso', idoso_id=idoso.id)
+    else:
+        form = DispositivoForm()
+    
+    return render(request, 'monitoramento/adicionar_dispositivo.html', {
+        'form': form, 
+        'idoso': idoso
+    })
+
+@login_required
+def historico_dados(request, idoso_id):
+    """Mostra histórico completo de dados de um idoso com paginação"""
+    idoso = get_object_or_404(Idoso, id=idoso_id)
+    
+    # Filtrar por período
+    dias = request.GET.get('dias', 7)
+    data_inicio = timezone.now() - timedelta(days=int(dias))
+    
+    dados = DadoSaude.objects.filter(
+        idoso=idoso, 
+        timestamp__gte=data_inicio
+    ).order_by('-timestamp')
+    
+    # Paginação
+    paginator = Paginator(dados, 20)
+    page = request.GET.get('page')
+    dados_paginados = paginator.get_page(page)
+    
+    return render(request, 'monitoramento/historico_dados.html', {
+        'idoso': idoso,
+        'dados': dados_paginados,
+        'dias': dias
+    })
+
+@login_required
+def lista_alertas(request):
+    """Lista todos os alertas com filtros"""
+    alertas = Alerta.objects.all().order_by('-timestamp')
+    
+    # Filtros
+    nivel = request.GET.get('nivel')
+    tipo = request.GET.get('tipo')
+    visualizado = request.GET.get('visualizado')
+    
+    if nivel:
+        alertas = alertas.filter(nivel=nivel)
+    if tipo:
+        alertas = alertas.filter(tipo=tipo)
+    if visualizado:
+        alertas = alertas.filter(visualizado=visualizado == 'true')
+    
+    return render(request, 'monitoramento/lista_alertas.html', {
+        'alertas': alertas[:100],
+        'filtros': {'nivel': nivel, 'tipo': tipo, 'visualizado': visualizado}
+    })
+
+@login_required
+def marcar_alerta_lido(request, alerta_id):
+    """Marca alerta como visualizado"""
+    alerta = get_object_or_404(Alerta, id=alerta_id)
+    alerta.visualizado = True
+    alerta.data_visualizacao = timezone.now()
+    alerta.save()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    
+    messages.success(request, '✅ Alerta marcado como lido!')
+    return redirect('lista_alertas')
+
+@login_required
+def relatorios(request):
+    """Dashboard de relatórios"""
+    idosos = Idoso.objects.filter(ativo=True)
+    
+    total_alertas = Alerta.objects.count()
+    alertas_criticos = Alerta.objects.filter(nivel='critico').count()
+    media_frequencia = DadoSaude.objects.filter(
+        frequencia_cardiaca__isnull=False
+    ).aggregate(avg=Avg('frequencia_cardiaca'))
+    
+    return render(request, 'monitoramento/relatorios.html', {
+        'idosos': idosos,
+        'total_alertas': total_alertas,
+        'alertas_criticos': alertas_criticos,
+        'media_frequencia': media_frequencia['avg']
+    })
+
+@login_required
 def exportar_dados(request):
     """Exporta dados em CSV"""
-    import csv
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="dados_idosos.csv"'
     
@@ -169,13 +272,9 @@ def exportar_dados(request):
     
     return response
 
-def index(request):
-    """Página inicial pública"""
-    return render(request, 'monitoramento/index.html')
-
-# ====================================================================================
-# API ENDPOINTS PARA GRÁFICOS
-# ====================================================================================
+# ==========================================
+# 6. API ENDPOINTS PARA GRÁFICOS
+# ==========================================
 
 @login_required
 def api_grafico_frequencia(request):
@@ -275,9 +374,9 @@ def api_grafico_passos(request):
         'data': dados
     })
 
-# ====================================================================================
-# RELATÓRIOS PDF
-# ====================================================================================
+# ==========================================
+# 7. RELATÓRIOS PDF
+# ==========================================
 
 @login_required
 def gerar_relatorio_pdf_idoso(request, idoso_id):
@@ -615,4 +714,3 @@ def gerar_relatorio_pdf_geral(request):
     response.write(pdf)
     
     return response
-
