@@ -53,7 +53,6 @@ def index(request):
 # ==========================================
 # 5. VIEWS AUTENTICADAS (LOGIN REQUIRED)
 # ==========================================
-
 @login_required
 def dashboard(request):
     """Dashboard principal com dados para gráficos"""
@@ -70,6 +69,58 @@ def dashboard(request):
     # Alertas não visualizados
     alertas_pendentes = Alerta.objects.filter(visualizado=False).order_by('-timestamp')[:5]
     
+    # ==========================================
+    # DADOS PARA OS GRÁFICOS (ADICIONE ISTO)
+    # ==========================================
+    
+    # Gráfico de Frequência (últimas 24h)
+    labels_fc, dados_fc = [], []
+    for i in range(6, 0, -1):
+        inicio = timezone.now() - timedelta(hours=i*4)
+        media = DadoSaude.objects.filter(
+            timestamp__gte=inicio,
+            frequencia_cardiaca__isnull=False
+        ).aggregate(media=Avg('frequencia_cardiaca'))['media']
+        dados_fc.append(round(media) if media else 0)
+        labels_fc.append(inicio.strftime('%Hh'))
+    
+    # Gráfico de Pressão
+    labels_pressao, dados_sistolica, dados_diastolica = [], [], []
+    for i in range(6, 0, -1):
+        inicio = timezone.now() - timedelta(hours=i*4)
+        media_sis = DadoSaude.objects.filter(
+            timestamp__gte=inicio,
+            pressao_sistolica__isnull=False
+        ).aggregate(media=Avg('pressao_sistolica'))['media']
+        media_dias = DadoSaude.objects.filter(
+            timestamp__gte=inicio,
+            pressao_diastolica__isnull=False
+        ).aggregate(media=Avg('pressao_diastolica'))['media']
+        dados_sistolica.append(round(media_sis) if media_sis else 0)
+        dados_diastolica.append(round(media_dias) if media_dias else 0)
+        labels_pressao.append(inicio.strftime('%Hh'))
+    
+    # Gráfico de Alertas
+    alertas_por_tipo = Alerta.objects.values('tipo').annotate(
+        total=Count('id')
+    ).order_by('-total')[:5]
+    labels_alertas = [a['tipo'].replace('_', ' ').title() for a in alertas_por_tipo]
+    dados_alertas = [a['total'] for a in alertas_por_tipo]
+    
+    # Gráfico de Passos (últimos 7 dias)
+    labels_passos, dados_passos = [], []
+    for i in range(6, -1, -1):
+        dia = timezone.now() - timedelta(days=i)
+        inicio_dia = dia.replace(hour=0, minute=0, second=0)
+        fim_dia = dia.replace(hour=23, minute=59, second=59)
+        total = DadoSaude.objects.filter(
+            timestamp__gte=inicio_dia,
+            timestamp__lte=fim_dia,
+            passos__isnull=False
+        ).aggregate(media=Avg('passos'))['media']
+        dados_passos.append(round(total) if total else 0)
+        labels_passos.append(dia.strftime('%a'))
+    
     context = {
         'idosos': idosos,
         'total_idosos': total_idosos,
@@ -77,6 +128,15 @@ def dashboard(request):
         'alertas_recentes': alertas_recentes,
         'ultimos_dados': ultimos_dados,
         'alertas_pendentes': alertas_pendentes,
+        'chart_labels_fc': labels_fc,
+        'chart_dados_fc': dados_fc,
+        'chart_labels_pressao': labels_pressao,
+        'chart_dados_sistolica': dados_sistolica,
+        'chart_dados_diastolica': dados_diastolica,
+        'chart_labels_alertas': labels_alertas,
+        'chart_dados_alertas': dados_alertas,
+        'chart_labels_passos': labels_passos,
+        'chart_dados_passos': dados_passos,
     }
     return render(request, 'monitoramento/dashboard.html', context)
 
